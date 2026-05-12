@@ -43,7 +43,7 @@ interface NewClientForm {
   license_photo_back: string | null;
 }
 
-type Step = 1 | 2;
+type Step = 0 | 1 | 2;
 type ClientMode = "existing" | "new";
 
 const STATUS_BADGE: Record<string, string> = {
@@ -221,7 +221,7 @@ export default function RentalsPage() {
     setClientMode("existing");
     setScanError(null);
     setNewClientForm({ first_name: "", last_name: "", email: "", phone: "", id_number: "", drivers_license: "", license_photo_front: null, license_photo_back: null });
-    setDamages([]); setStep(1); setShowModal(true);
+    setDamages([]); setStep(0); setShowModal(true);
   };
   const save = async () => {
     setSaving(true);
@@ -436,32 +436,23 @@ export default function RentalsPage() {
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#E7E7E7] flex-shrink-0">
               <div>
                 <h2 className="text-lg font-bold text-slate-800">Novi kratkoročni najam</h2>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <button
-                    onClick={() => setStep(1)}
-                    className={clsx(
-                      "flex items-center gap-1.5 text-xs font-semibold transition-colors",
-                      step === 1 ? "text-[#003580]" : step1Valid ? "text-slate-400 hover:text-slate-700 cursor-pointer" : "text-slate-300 cursor-default"
-                    )}
-                  >
-                    <span className={clsx("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold",
-                      step === 1 ? "bg-[#003580] text-white" : step1Valid ? "bg-slate-200 text-slate-600" : "bg-slate-100 text-slate-400"
-                    )}>1</span>
-                    Detalji najma
-                  </button>
-                  <span className="text-slate-300">›</span>
-                  <span className={clsx("flex items-center gap-1.5 text-xs font-semibold",
-                    step === 2 ? "text-[#003580]" : "text-slate-400"
-                  )}>
-                    <span className={clsx("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold",
-                      step === 2 ? "bg-[#003580] text-white" : "bg-slate-100 text-slate-400"
-                    )}>2</span>
-                    Pregled vozila
-                    {damages.length > 0 && (
-                      <span className="bg-amber-500 text-white text-[10px] rounded-full px-1.5">{damages.length}</span>
-                    )}
-                  </span>
-                </div>
+                {step > 0 && (
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <button
+                      onClick={() => setStep(1)}
+                      className={clsx("flex items-center gap-1.5 text-xs font-semibold transition-colors", step === 1 ? "text-[#003580]" : step1Valid ? "text-slate-400 hover:text-slate-700 cursor-pointer" : "text-slate-300 cursor-default")}
+                    >
+                      <span className={clsx("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", step === 1 ? "bg-[#003580] text-white" : step1Valid ? "bg-slate-200 text-slate-600" : "bg-slate-100 text-slate-400")}>1</span>
+                      Detalji najma
+                    </button>
+                    <span className="text-slate-300">›</span>
+                    <span className={clsx("flex items-center gap-1.5 text-xs font-semibold", step === 2 ? "text-[#003580]" : "text-slate-400")}>
+                      <span className={clsx("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", step === 2 ? "bg-[#003580] text-white" : "bg-slate-100 text-slate-400")}>2</span>
+                      Pregled vozila
+                      {damages.length > 0 && <span className="bg-amber-500 text-white text-[10px] rounded-full px-1.5">{damages.length}</span>}
+                    </span>
+                  </div>
+                )}
               </div>
               <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -472,230 +463,209 @@ export default function RentalsPage() {
 
             {/* Body */}
             <div className="overflow-y-auto flex-1 px-6 py-5">
-              {step === 1 && (
-                <div className="space-y-4">
-                  <div>
-                    <ModalLabel>
-                      Vozilo — dostupna za period
-                      {form.start_date && form.end_date
-                        ? ` (${form.start_date} → ${form.end_date})`
-                        : form.start_date ? ` od ${form.start_date}` : ""}
-                    </ModalLabel>
-                    <ModalSelect
-                      value={form.vehicle_id}
-                      onChange={(e) => handleVehicleSelect(e.target.value)}
-                      disabled={!form.start_date || !form.end_date}
+
+              {/* ── Step 0: client type selection ── */}
+              {step === 0 && (
+                <div className="flex flex-col items-center justify-center py-4">
+                  <p className="text-sm text-slate-500 mb-6">Odaberite tip klijenta za ovaj najam</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
+                    {/* New client */}
+                    <button
+                      type="button"
+                      onClick={() => { setClientMode("new"); setStep(1); }}
+                      className="group flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-emerald-200 bg-emerald-50 hover:border-emerald-400 hover:bg-emerald-100 transition-all active:scale-95"
                     >
-                      <option value="">
-                        {!form.end_date ? "Prvo odaberite datume..." : availableVehicles.length === 0 ? "Nema slobodnih vozila" : "Odaberi vozilo..."}
-                      </option>
-                      {availableVehicles.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.make} {v.model} — {v.registration} (€{v.daily_rate}/dan)
-                        </option>
-                      ))}
-                    </ModalSelect>
-                  </div>
-                  {/* Client picker */}
-                  <div className="space-y-3">
-                    <ModalLabel>Klijent</ModalLabel>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setClientMode("existing")}
-                        className={clsx(
-                          "flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all",
-                          clientMode === "existing"
-                            ? "bg-[#003580] text-white border-[#003580]"
-                            : "bg-white text-slate-600 border-slate-200 hover:border-[#003580]/40 hover:text-[#003580]"
-                        )}
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                          <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
-                        </svg>
-                        Postojeći klijent
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setClientMode("new")}
-                        className={clsx(
-                          "flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all",
-                          clientMode === "new"
-                            ? "bg-[#003580] text-white border-[#003580]"
-                            : "bg-white text-slate-600 border-slate-200 hover:border-[#003580]/40 hover:text-[#003580]"
-                        )}
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center shadow-md shadow-emerald-200 group-hover:scale-105 transition-transform">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/>
                           <line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
                         </svg>
-                        Novi klijent
-                      </button>
-                    </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-sm font-bold text-emerald-800">Novi klijent</div>
+                        <div className="text-xs text-emerald-600 mt-0.5">Skeniraj vozačku + unesi podatke</div>
+                      </div>
+                    </button>
+                    {/* Existing client */}
+                    <button
+                      type="button"
+                      onClick={() => { setClientMode("existing"); setStep(1); }}
+                      className="group flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-[#003580]/20 bg-[#003580]/5 hover:border-[#003580]/40 hover:bg-[#003580]/10 transition-all active:scale-95"
+                    >
+                      <div className="w-16 h-16 rounded-full bg-[#003580] flex items-center justify-center shadow-md shadow-[#003580]/20 group-hover:scale-105 transition-transform">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                          <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+                        </svg>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-sm font-bold text-[#003580]">Postojeći klijent</div>
+                        <div className="text-xs text-[#003580]/60 mt-0.5">Odaberi iz baze klijenata</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
 
-                    {clientMode === "existing" && (
+              {step === 1 && (
+                <div className="space-y-4">
+
+                  {/* New client: photos FIRST, then fields */}
+                  {clientMode === "new" && (
+                    <div className="bg-slate-50 border border-[#E7E7E7] rounded-xl p-4 space-y-4">
+
+                      {/* 1. Photo upload */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <ModalLabel>Fotografija vozačke dozvole</ModalLabel>
+                          {newClientForm.license_photo_front && (
+                            <button
+                              type="button"
+                              onClick={() => scanLicense(newClientForm.license_photo_front!)}
+                              disabled={scanning}
+                              className="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-[#003580] text-white hover:bg-[#00256a] disabled:opacity-60 transition-colors"
+                            >
+                              {scanning ? (
+                                <>
+                                  <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20" strokeLinecap="round"/>
+                                  </svg>
+                                  Skeniranje...
+                                </>
+                              ) : (
+                                <>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                                  </svg>
+                                  Skeniraj podatke
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                        {scanError && <p className="text-[11px] text-amber-600 mb-1.5 font-medium">{scanError}</p>}
+                        <div className="grid grid-cols-2 gap-2">
+                          {/* Front */}
+                          <label className="relative cursor-pointer group">
+                            <input type="file" accept="image/*" capture="environment" className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = () => { const dataUrl = reader.result as string; setNewClientForm((p) => ({ ...p, license_photo_front: dataUrl })); scanLicense(dataUrl); };
+                                reader.readAsDataURL(file);
+                              }}
+                            />
+                            {newClientForm.license_photo_front ? (
+                              <div className="relative">
+                                <img src={newClientForm.license_photo_front} alt="Prednja strana" className="w-full h-28 object-cover rounded-xl border border-slate-200" />
+                                <span className="absolute bottom-1.5 left-1.5 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">Prednja ✓</span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-slate-300 group-hover:border-emerald-400 rounded-xl transition-colors bg-white">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:stroke-emerald-500 transition-colors">
+                                  <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                                <span className="text-[11px] text-slate-400 mt-2 group-hover:text-emerald-600 transition-colors font-medium">Prednja strana</span>
+                                <span className="text-[10px] text-slate-300 mt-0.5">Tapni za foto</span>
+                              </div>
+                            )}
+                          </label>
+                          {/* Back */}
+                          <label className="relative cursor-pointer group">
+                            <input type="file" accept="image/*" capture="environment" className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = () => setNewClientForm((p) => ({ ...p, license_photo_back: reader.result as string }));
+                                reader.readAsDataURL(file);
+                              }}
+                            />
+                            {newClientForm.license_photo_back ? (
+                              <div className="relative">
+                                <img src={newClientForm.license_photo_back} alt="Stražnja strana" className="w-full h-28 object-cover rounded-xl border border-slate-200" />
+                                <span className="absolute bottom-1.5 left-1.5 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">Stražnja ✓</span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-slate-300 group-hover:border-slate-400 rounded-xl transition-colors bg-white">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                                <span className="text-[11px] text-slate-400 mt-2 font-medium">Stražnja strana</span>
+                                <span className="text-[10px] text-slate-300 mt-0.5">Tapni za foto</span>
+                              </div>
+                            )}
+                          </label>
+                        </div>
+                        {scanning && (
+                          <p className="text-[11px] text-[#003580] mt-2 font-medium animate-pulse">AI čita podatke s vozačke dozvole...</p>
+                        )}
+                      </div>
+
+                      {/* 2. Fields (auto-filled or manual) */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <ModalLabel>Podaci klijenta</ModalLabel>
+                          {(newClientForm.first_name || newClientForm.last_name) && (
+                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">Auto-popunjeno</span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <ModalLabel>Ime <span className="text-red-400">*</span></ModalLabel>
+                            <ModalInput placeholder="Marko" value={newClientForm.first_name} onChange={(e) => setNewClientForm((p) => ({ ...p, first_name: e.target.value }))} />
+                          </div>
+                          <div>
+                            <ModalLabel>Prezime <span className="text-red-400">*</span></ModalLabel>
+                            <ModalInput placeholder="Marković" value={newClientForm.last_name} onChange={(e) => setNewClientForm((p) => ({ ...p, last_name: e.target.value }))} />
+                          </div>
+                          <div>
+                            <ModalLabel>Broj osobne iskaznice</ModalLabel>
+                            <ModalInput placeholder="123456789" value={newClientForm.id_number} onChange={(e) => setNewClientForm((p) => ({ ...p, id_number: e.target.value }))} />
+                          </div>
+                          <div>
+                            <ModalLabel>Broj vozačke dozvole</ModalLabel>
+                            <ModalInput placeholder="B1234567" value={newClientForm.drivers_license} onChange={(e) => setNewClientForm((p) => ({ ...p, drivers_license: e.target.value }))} />
+                          </div>
+                          <div>
+                            <ModalLabel>Email</ModalLabel>
+                            <ModalInput type="email" placeholder="marko@email.com" value={newClientForm.email} onChange={(e) => setNewClientForm((p) => ({ ...p, email: e.target.value }))} />
+                          </div>
+                          <div>
+                            <ModalLabel>Telefon</ModalLabel>
+                            <ModalInput placeholder="+385 91 234 5678" value={newClientForm.phone} onChange={(e) => setNewClientForm((p) => ({ ...p, phone: e.target.value }))} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Existing client dropdown */}
+                  {clientMode === "existing" && (
+                    <div>
+                      <ModalLabel>Klijent</ModalLabel>
                       <ModalSelect value={form.client_id} onChange={(e) => setForm((p) => ({ ...p, client_id: e.target.value }))}>
                         <option value="">Odaberi klijenta...</option>
                         {clients.map((c) => (
                           <option key={c.id} value={c.id}>{c.full_name}{c.phone ? ` — ${c.phone}` : ""}</option>
                         ))}
                       </ModalSelect>
-                    )}
+                    </div>
+                  )}
 
-                    {clientMode === "new" && (
-                      <div className="bg-slate-50 border border-[#E7E7E7] rounded-xl p-4 space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <ModalLabel>Ime <span className="text-red-400">*</span></ModalLabel>
-                            <ModalInput
-                              placeholder="Marko"
-                              value={newClientForm.first_name}
-                              onChange={(e) => setNewClientForm((p) => ({ ...p, first_name: e.target.value }))}
-                            />
-                          </div>
-                          <div>
-                            <ModalLabel>Prezime <span className="text-red-400">*</span></ModalLabel>
-                            <ModalInput
-                              placeholder="Marković"
-                              value={newClientForm.last_name}
-                              onChange={(e) => setNewClientForm((p) => ({ ...p, last_name: e.target.value }))}
-                            />
-                          </div>
-                          <div>
-                            <ModalLabel>Email</ModalLabel>
-                            <ModalInput
-                              type="email"
-                              placeholder="marko@email.com"
-                              value={newClientForm.email}
-                              onChange={(e) => setNewClientForm((p) => ({ ...p, email: e.target.value }))}
-                            />
-                          </div>
-                          <div>
-                            <ModalLabel>Telefon</ModalLabel>
-                            <ModalInput
-                              placeholder="+385 91 234 5678"
-                              value={newClientForm.phone}
-                              onChange={(e) => setNewClientForm((p) => ({ ...p, phone: e.target.value }))}
-                            />
-                          </div>
-                          <div>
-                            <ModalLabel>Broj osobne iskaznice</ModalLabel>
-                            <ModalInput
-                              placeholder="123456789"
-                              value={newClientForm.id_number}
-                              onChange={(e) => setNewClientForm((p) => ({ ...p, id_number: e.target.value }))}
-                            />
-                          </div>
-                          <div>
-                            <ModalLabel>Broj vozačke dozvole</ModalLabel>
-                            <ModalInput
-                              placeholder="B1234567"
-                              value={newClientForm.drivers_license}
-                              onChange={(e) => setNewClientForm((p) => ({ ...p, drivers_license: e.target.value }))}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Driving license photos */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1.5">
-                            <ModalLabel>Fotografija vozačke dozvole</ModalLabel>
-                            {newClientForm.license_photo_front && (
-                              <button
-                                type="button"
-                                onClick={() => scanLicense(newClientForm.license_photo_front!)}
-                                disabled={scanning}
-                                className="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-[#003580] text-white hover:bg-[#00256a] disabled:opacity-60 transition-colors"
-                              >
-                                {scanning ? (
-                                  <>
-                                    <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none">
-                                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="60" strokeDashoffset="20" strokeLinecap="round"/>
-                                    </svg>
-                                    Skeniranje...
-                                  </>
-                                ) : (
-                                  <>
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-                                    </svg>
-                                    Skeniraj podatke
-                                  </>
-                                )}
-                              </button>
-                            )}
-                          </div>
-                          {scanError && (
-                            <p className="text-[11px] text-amber-600 mb-1.5 font-medium">{scanError}</p>
-                          )}
-                          <div className="grid grid-cols-2 gap-2">
-                            <label className="relative cursor-pointer group">
-                              <input
-                                type="file"
-                                accept="image/*"
-                                capture="environment"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-                                  const reader = new FileReader();
-                                  reader.onload = () => {
-                                    const dataUrl = reader.result as string;
-                                    setNewClientForm((p) => ({ ...p, license_photo_front: dataUrl }));
-                                    scanLicense(dataUrl);
-                                  };
-                                  reader.readAsDataURL(file);
-                                }}
-                              />
-                              {newClientForm.license_photo_front ? (
-                                <div className="relative">
-                                  <img src={newClientForm.license_photo_front} alt="Prednja strana" className="w-full h-24 object-cover rounded-lg border border-slate-200" />
-                                  <span className="absolute bottom-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">Prednja strana ✓</span>
-                                </div>
-                              ) : (
-                                <div className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-slate-300 group-hover:border-[#003580]/50 rounded-lg transition-colors bg-white">
-                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-                                    <polyline points="21 15 16 10 5 21"/>
-                                  </svg>
-                                  <span className="text-[11px] text-slate-400 mt-1.5 group-hover:text-[#003580] transition-colors">Prednja strana</span>
-                                </div>
-                              )}
-                            </label>
-                            <label className="relative cursor-pointer group">
-                              <input
-                                type="file"
-                                accept="image/*"
-                                capture="environment"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-                                  const reader = new FileReader();
-                                  reader.onload = () => setNewClientForm((p) => ({ ...p, license_photo_back: reader.result as string }));
-                                  reader.readAsDataURL(file);
-                                }}
-                              />
-                              {newClientForm.license_photo_back ? (
-                                <div className="relative">
-                                  <img src={newClientForm.license_photo_back} alt="Stražnja strana" className="w-full h-24 object-cover rounded-lg border border-slate-200" />
-                                  <span className="absolute bottom-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">Stražnja strana ✓</span>
-                                </div>
-                              ) : (
-                                <div className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-slate-300 group-hover:border-[#003580]/50 rounded-lg transition-colors bg-white">
-                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-                                    <polyline points="21 15 16 10 5 21"/>
-                                  </svg>
-                                  <span className="text-[11px] text-slate-400 mt-1.5 group-hover:text-[#003580] transition-colors">Stražnja strana</span>
-                                </div>
-                              )}
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                  {/* Dates + vehicle (shared) */}
+                  <div>
+                    <ModalLabel>
+                      Vozilo — dostupna za period
+                      {form.start_date && form.end_date ? ` (${form.start_date} → ${form.end_date})` : form.start_date ? ` od ${form.start_date}` : ""}
+                    </ModalLabel>
+                    <ModalSelect value={form.vehicle_id} onChange={(e) => handleVehicleSelect(e.target.value)} disabled={!form.start_date || !form.end_date}>
+                      <option value="">{!form.end_date ? "Prvo odaberite datume..." : availableVehicles.length === 0 ? "Nema slobodnih vozila" : "Odaberi vozilo..."}</option>
+                      {availableVehicles.map((v) => (
+                        <option key={v.id} value={v.id}>{v.make} {v.model} — {v.registration} (€{v.daily_rate}/dan)</option>
+                      ))}
+                    </ModalSelect>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
