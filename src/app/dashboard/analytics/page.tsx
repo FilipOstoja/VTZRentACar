@@ -19,7 +19,7 @@ interface Vehicle {
   purchase_price?: number; current_km?: number; registration_expiry?: string;
 }
 interface Rental {
-  id: string; vehicle_id: string; start_date: string; end_date: string;
+  id: string; vehicle_id: string; start_date: string; end_date?: string;
   total_amount: number; status: string;
 }
 interface Expense {
@@ -173,7 +173,7 @@ export default function AnalyticsPage() {
       setYearlyExpenses((yearExpRes as any).data || []);
 
       // Build alerts
-      const overdue = (rRes.data || []).filter((r: Rental) => r.status === "active" && r.end_date < today);
+      const overdue = (rRes.data || []).filter((r: Rental) => r.status === "active" && !!r.end_date && r.end_date < today);
       const expiring = vs.filter((v: Vehicle) => v.registration_expiry && v.registration_expiry >= today && v.registration_expiry <= in30);
       setAlerts([
         ...overdue.map((r: Rental) => {

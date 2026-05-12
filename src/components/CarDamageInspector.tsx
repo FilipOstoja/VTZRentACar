@@ -620,9 +620,9 @@ export function CarDamageInspector({
             {/* Pending pin crosshair */}
             {pending && (
               <g>
-                <circle cx={pending.x} cy={pending.y} r={11} fill="#f97316" fillOpacity="0.35" stroke="#f97316" strokeWidth="2" />
-                <line x1={pending.x - 16} y1={pending.y} x2={pending.x + 16} y2={pending.y} stroke="#f97316" strokeWidth="1.2" />
-                <line x1={pending.x} y1={pending.y - 16} x2={pending.x} y2={pending.y + 16} stroke="#f97316" strokeWidth="1.2" />
+                <circle cx={pending!.x} cy={pending!.y} r={11} fill="#f97316" fillOpacity="0.35" stroke="#f97316" strokeWidth="2" />
+                <line x1={pending!.x - 16} y1={pending!.y} x2={pending!.x + 16} y2={pending!.y} stroke="#f97316" strokeWidth="1.2" />
+                <line x1={pending!.x} y1={pending!.y - 16} x2={pending!.x} y2={pending!.y + 16} stroke="#f97316" strokeWidth="1.2" />
               </g>
             )}
           </svg>
@@ -640,7 +640,7 @@ export function CarDamageInspector({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-zinc-100">Novo oštećenje</p>
-              <p className="text-xs text-orange-400 mt-0.5">{VIEW_LABELS[currentView]} — {pending.zone}</p>
+              <p className="text-xs text-orange-400 mt-0.5">{VIEW_LABELS[currentView]} — {pending!.zone}</p>
             </div>
             <button onClick={() => setPending(null)} className="text-zinc-500 hover:text-zinc-300 transition-colors">
               <X size={16} />

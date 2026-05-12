@@ -43,7 +43,7 @@ export default function TestContractPage() {
         import("@react-pdf/renderer"),
       ]);
       const React = (await import("react")).default;
-      const blob = await pdf(React.createElement(RentalContractPDF, { data: SAMPLE })).toBlob();
+      const blob = await pdf(React.createElement(RentalContractPDF, { data: SAMPLE }) as React.ReactElement<any>).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
