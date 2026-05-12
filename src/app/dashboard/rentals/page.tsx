@@ -137,6 +137,8 @@ export default function RentalsPage() {
     vehicle_id: "", client_id: "",
     start_date: new Date().toISOString().split("T")[0],
     end_date: "", pickup_km: 0, deposit_amount: 200, daily_rate: 0,
+    pickup_type: "walk_in" as "walk_in" | "airport",
+    flight_number: "",
   });
   const [damages, setDamages] = useState<DamagePin[]>([]);
 
@@ -187,7 +189,8 @@ export default function RentalsPage() {
   const totalAmount = totalDays * dailyRate;
   const newClientValid = newClientForm.first_name.trim() !== "" && newClientForm.last_name.trim() !== "";
   const step1Valid = form.vehicle_id && form.end_date && totalDays > 0 &&
-    (clientMode === "existing" ? !!form.client_id : newClientValid);
+    (clientMode === "existing" ? !!form.client_id : newClientValid) &&
+    (form.pickup_type === "walk_in" || form.flight_number.trim() !== "");
 
   const handleVehicleSelect = (id: string) => {
     const v = vehicles.find((v) => v.id === id);
@@ -219,7 +222,7 @@ export default function RentalsPage() {
   };
 
   const openModal = () => {
-    setForm({ vehicle_id: "", client_id: "", start_date: new Date().toISOString().split("T")[0], end_date: "", pickup_km: 0, deposit_amount: 200, daily_rate: 0 });
+    setForm({ vehicle_id: "", client_id: "", start_date: new Date().toISOString().split("T")[0], end_date: "", pickup_km: 0, deposit_amount: 200, daily_rate: 0, pickup_type: "walk_in", flight_number: "" });
     setClientMode("existing");
     setScanError(null);
     setNewClientForm({ first_name: "", last_name: "", email: "", phone: "", id_number: "", drivers_license: "", license_photo_front: null, license_photo_back: null });
@@ -732,6 +735,107 @@ export default function RentalsPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* ── Pickup type ── */}
+                  <div>
+                    <ModalLabel>Vrsta preuzimanja</ModalLabel>
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Walk-in */}
+                      <button
+                        type="button"
+                        onClick={() => setForm((p) => ({ ...p, pickup_type: "walk_in", flight_number: "" }))}
+                        className={`group flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all active:scale-95 ${
+                          form.pickup_type === "walk_in"
+                            ? "border-emerald-400 bg-emerald-50 ring-2 ring-emerald-200"
+                            : "border-emerald-200 bg-emerald-50/40 hover:border-emerald-300 hover:bg-emerald-50"
+                        }`}
+                      >
+                        <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-transform group-hover:scale-105 ${
+                          form.pickup_type === "walk_in"
+                            ? "bg-emerald-500 shadow-emerald-200"
+                            : "bg-emerald-400/70 shadow-emerald-100"
+                        }`}>
+                          {/* Walking person icon */}
+                          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="4" r="1.5"/>
+                            <path d="M9 8l-2 5h3l1 6M15 8l2 5h-3l-1 6"/>
+                            <path d="M10 13h4"/>
+                          </svg>
+                        </div>
+                        <div className="text-center">
+                          <div className={`text-sm font-bold ${form.pickup_type === "walk_in" ? "text-emerald-800" : "text-emerald-700"}`}>
+                            Walk-in
+                          </div>
+                          <div className="text-xs text-emerald-600/70 mt-0.5">Klijent dolazi sam</div>
+                        </div>
+                        {form.pickup_type === "walk_in" && (
+                          <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          </div>
+                        )}
+                      </button>
+
+                      {/* Airport pickup */}
+                      <button
+                        type="button"
+                        onClick={() => setForm((p) => ({ ...p, pickup_type: "airport" }))}
+                        className={`group flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all active:scale-95 ${
+                          form.pickup_type === "airport"
+                            ? "border-[#003580]/60 bg-[#003580]/8 ring-2 ring-[#003580]/20"
+                            : "border-[#003580]/20 bg-[#003580]/5 hover:border-[#003580]/35 hover:bg-[#003580]/8"
+                        }`}
+                        style={form.pickup_type === "airport" ? { backgroundColor: "rgba(0,53,128,0.06)" } : {}}
+                      >
+                        <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-transform group-hover:scale-105 ${
+                          form.pickup_type === "airport"
+                            ? "bg-[#003580] shadow-[#003580]/30"
+                            : "bg-[#003580]/60 shadow-[#003580]/10"
+                        }`}>
+                          {/* Airplane icon */}
+                          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 20 3c-1-1-3-1-4.5.5L12 7 3.8 5.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>
+                          </svg>
+                        </div>
+                        <div className="text-center">
+                          <div className={`text-sm font-bold ${form.pickup_type === "airport" ? "text-[#003580]" : "text-[#003580]/70"}`}>
+                            Aerodrom
+                          </div>
+                          <div className="text-xs text-[#003580]/50 mt-0.5">Preuzimanje s leta</div>
+                        </div>
+                        {form.pickup_type === "airport" && (
+                          <div className="w-5 h-5 rounded-full bg-[#003580] flex items-center justify-center">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          </div>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Flight number input (visible only for airport) */}
+                    {form.pickup_type === "airport" && (
+                      <div className="mt-3">
+                        <ModalLabel>
+                          Broj leta <span className="text-red-400">*</span>
+                        </ModalLabel>
+                        <ModalInput
+                          placeholder="npr. FR1234 ili W61234"
+                          value={form.flight_number}
+                          onChange={(e) =>
+                            setForm((p) => ({
+                              ...p,
+                              flight_number: e.target.value.toUpperCase().replace(/\s/g, ""),
+                            }))
+                          }
+                        />
+                        <p className="text-[11px] text-slate-400 mt-1">
+                          IATA format: dvoslovni kod aviokompanije + broj (npr. W6 1234)
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import AirportArrivalsCard from "@/components/AirportArrivalsCard";
+import type { AirportRental } from "@/components/AirportArrivalsCard";
 
 // ── Stat card ──────────────────────────────────────────────
 function StatCard({
@@ -110,6 +112,7 @@ export default async function DashboardPage() {
     { data: todayRentals },
     { data: expiringRegs },
     { data: activeRentals },
+    { data: airportRentalsRaw },
   ] = await Promise.all([
     supabase.from("vehicles").select("status").neq("status", "inactive"),
     supabase
@@ -127,6 +130,11 @@ export default async function DashboardPage() {
       .from("rentals")
       .select("id, end_date, vehicles(make, model, registration)")
       .eq("status", "active"),
+    supabase
+      .from("rentals")
+      .select("id, flight_number, start_date, vehicles(make, model, registration), clients(full_name)")
+      .eq("status", "active")
+      .eq("pickup_type", "airport"),
   ]);
 
   const freeCount    = vehicles?.filter((v) => v.status === "free").length    ?? 0;
@@ -139,6 +147,16 @@ export default async function DashboardPage() {
   const checkouts     = todayRentals?.filter((r) => r.start_date === today) ?? [];
   const checkins      = todayRentals?.filter((r) => r.end_date   === today) ?? [];
   const overdueRentals = activeRentals?.filter((r) => r.end_date < today)   ?? [];
+
+  const airportRentals: AirportRental[] = (airportRentalsRaw ?? []).map((r: any) => ({
+    id: r.id,
+    flight_number: r.flight_number ?? null,
+    start_date: r.start_date,
+    client_name: r.clients?.full_name ?? "—",
+    vehicle_make: r.vehicles?.make ?? "",
+    vehicle_model: r.vehicles?.model ?? "",
+    vehicle_registration: r.vehicles?.registration ?? "",
+  }));
 
   const dateLabel = new Date().toLocaleDateString("hr-HR", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
@@ -313,6 +331,9 @@ export default async function DashboardPage() {
                 </div>
               </div>
             )}
+
+            {/* Airport arrivals */}
+            <AirportArrivalsCard initialRentals={airportRentals} />
 
             {/* Fleet distribution */}
             <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5">
