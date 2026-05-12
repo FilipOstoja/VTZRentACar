@@ -8,6 +8,7 @@ import ReceiptUpload from "@/components/expenses/ReceiptUpload";
 import ReceiptLightbox from "@/components/expenses/ReceiptLightbox";
 import { uploadReceipt, getReceiptUrl } from "@/lib/receipts";
 import { CarDamageInspector, type DamagePin } from "@/components/CarDamageInspector";
+import { getVehiclePhoto } from "@/lib/vehiclePhoto";
 
 const STATUS_LABELS: Record<string, string> = {
   free: "Slobodno",
@@ -211,6 +212,7 @@ export default function VehicleDetailPage() {
 
   const gradientKey = vehicle?.color?.toLowerCase() ?? "default";
   const gradient = VEHICLE_COLORS[gradientKey] ?? VEHICLE_COLORS.default;
+  const vehiclePhoto = vehicle ? getVehiclePhoto(vehicle.make, vehicle.model) : null;
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
@@ -275,13 +277,21 @@ export default function VehicleDetailPage() {
                 )}
               </div>
 
-              {/* Car silhouette */}
-              <div className="flex justify-center py-4">
-                <svg viewBox="0 0 240 100" className="w-48 h-20 opacity-25 fill-white" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M30 65 L30 55 Q32 45 50 40 L80 30 Q100 20 130 20 L165 20 Q185 20 200 30 L215 40 Q225 45 225 55 L225 65 Q220 70 210 70 L200 70 Q198 60 185 60 Q172 60 170 70 L80 70 Q78 60 65 60 Q52 60 50 70 L40 70 Q30 70 30 65 Z"/>
-                  <circle cx="65" cy="70" r="12" />
-                  <circle cx="185" cy="70" r="12" />
-                </svg>
+              {/* Car photo or silhouette */}
+              <div className="flex justify-center py-2">
+                {vehiclePhoto ? (
+                  <img
+                    src={vehiclePhoto}
+                    alt={`${vehicle.make} ${vehicle.model}`}
+                    className="w-56 h-28 object-contain drop-shadow-xl"
+                  />
+                ) : (
+                  <svg viewBox="0 0 240 100" className="w-48 h-20 opacity-25 fill-white" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M30 65 L30 55 Q32 45 50 40 L80 30 Q100 20 130 20 L165 20 Q185 20 200 30 L215 40 Q225 45 225 55 L225 65 Q220 70 210 70 L200 70 Q198 60 185 60 Q172 60 170 70 L80 70 Q78 60 65 60 Q52 60 50 70 L40 70 Q30 70 30 65 Z"/>
+                    <circle cx="65" cy="70" r="12" />
+                    <circle cx="185" cy="70" r="12" />
+                  </svg>
+                )}
               </div>
 
               <div>

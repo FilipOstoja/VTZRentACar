@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import clsx from "clsx";
 import QuickAddRow from "@/components/expenses/QuickAddRow";
 import GlobalExpenseModal from "@/components/expenses/GlobalExpenseModal";
+import { getVehiclePhoto } from "@/lib/vehiclePhoto";
 
 const STATUS_LABELS: Record<string, string> = {
   free: "Slobodno",
@@ -460,8 +461,25 @@ export default function FleetPage() {
                     {filtered.map((v) => (
                       <tr key={v.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-4 py-3">
-                          <div className="font-semibold text-slate-800 text-sm leading-tight">{v.make} {v.model}</div>
-                          {v.color && <div className="text-xs text-slate-400 mt-0.5">{v.color}</div>}
+                          <div className="flex items-center gap-3">
+                            {(() => {
+                              const photo = getVehiclePhoto(v.make, v.model);
+                              return photo ? (
+                                <img src={photo} alt={`${v.make} ${v.model}`} className="w-12 h-8 object-contain flex-shrink-0 rounded" />
+                              ) : (
+                                <div className="w-12 h-8 bg-slate-100 rounded flex items-center justify-center flex-shrink-0">
+                                  <svg viewBox="0 0 240 100" className="w-8 h-4 fill-slate-300">
+                                    <path d="M30 65 L30 55 Q32 45 50 40 L80 30 Q100 20 130 20 L165 20 Q185 20 200 30 L215 40 Q225 45 225 55 L225 65 Q220 70 210 70 L200 70 Q198 60 185 60 Q172 60 170 70 L80 70 Q78 60 65 60 Q52 60 50 70 L40 70 Q30 70 30 65 Z"/>
+                                    <circle cx="65" cy="70" r="12"/><circle cx="185" cy="70" r="12"/>
+                                  </svg>
+                                </div>
+                              );
+                            })()}
+                            <div>
+                              <div className="font-semibold text-slate-800 text-sm leading-tight">{v.make} {v.model}</div>
+                              {v.color && <div className="text-xs text-slate-400 mt-0.5">{v.color}</div>}
+                            </div>
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-sm font-mono font-semibold text-[#003580] whitespace-nowrap">{v.registration}</td>
                         <td className="px-4 py-3 text-sm text-slate-500">{v.year}</td>
