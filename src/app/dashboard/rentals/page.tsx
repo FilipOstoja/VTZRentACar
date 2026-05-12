@@ -751,14 +751,15 @@ export default function RentalsPage() {
               )}
               <div className="flex flex-wrap gap-2 justify-end">
                 <button onClick={() => setShowModal(false)} className="btn-secondary">Odustani</button>
-                {step === 1 ? (
+                {step === 1 && (
                   <button onClick={() => setStep(2)} disabled={!step1Valid} className="btn-primary">
                     Dalje — Pregled vozila
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="9 18 15 12 9 6"/>
                     </svg>
                   </button>
-                ) : (
+                )}
+                {step === 2 && (
                   <>
                     <button onClick={() => setStep(1)} className="btn-secondary">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

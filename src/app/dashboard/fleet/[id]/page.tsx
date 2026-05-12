@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import clsx from "clsx";
 import ReceiptUpload from "@/components/expenses/ReceiptUpload";
@@ -96,6 +96,7 @@ const emptyExpense = { date: new Date().toISOString().slice(0, 10), type: "maint
 export default function VehicleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
@@ -137,6 +138,18 @@ export default function VehicleDetailPage() {
   };
 
   useEffect(() => { load(); }, [id]);
+
+  // Auto-open expense modal when ?expense=<type> is in the URL (e.g. from dashboard alerts)
+  useEffect(() => {
+    const expenseType = searchParams.get("expense");
+    if (!expenseType || loading) return;
+    setNewExpense({ ...emptyExpense, type: expenseType });
+    setShowExpenseModal(true);
+    // Remove the param from the URL without navigation so it doesn't re-trigger
+    const url = new URL(window.location.href);
+    url.searchParams.delete("expense");
+    window.history.replaceState({}, "", url.toString());
+  }, [loading, searchParams]);
 
   const saveVehicle = async () => {
     if (!vehicle) return;

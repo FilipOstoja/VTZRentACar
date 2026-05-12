@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 // ── Stat card ──────────────────────────────────────────────
@@ -46,16 +47,18 @@ function AlertItem({
   title,
   message,
   action,
+  actionHref,
 }: {
   type: "danger" | "warning" | "info";
   title: string;
   message: string;
   action?: string;
+  actionHref?: string;
 }) {
   const styles = {
-    danger:  { wrap: "bg-red-50 border-l-4 border-red-500",  icon: "text-red-500",  title: "text-red-700",  btn: "text-red-600" },
-    warning: { wrap: "bg-amber-50 border-l-4 border-amber-500", icon: "text-amber-600", title: "text-amber-800", btn: "text-amber-700" },
-    info:    { wrap: "bg-blue-50 border-l-4 border-blue-400",  icon: "text-blue-600", title: "text-blue-800",  btn: "text-blue-700" },
+    danger:  { wrap: "bg-red-50 border-l-4 border-red-500",  icon: "text-red-500",  title: "text-red-700",  btn: "text-red-600 hover:text-red-800" },
+    warning: { wrap: "bg-amber-50 border-l-4 border-amber-500", icon: "text-amber-600", title: "text-amber-800", btn: "text-amber-700 hover:text-amber-900" },
+    info:    { wrap: "bg-blue-50 border-l-4 border-blue-400",  icon: "text-blue-600", title: "text-blue-800",  btn: "text-blue-700 hover:text-blue-900" },
   }[type];
 
   const Icon = type === "danger" ? (
@@ -80,7 +83,12 @@ function AlertItem({
       <div>
         <p className={`text-sm font-bold leading-tight ${styles.title}`}>{title}</p>
         <p className="text-xs text-slate-600 mt-1 leading-relaxed">{message}</p>
-        {action && (
+        {action && actionHref && (
+          <Link href={actionHref} className={`mt-2 inline-block text-[11px] font-bold uppercase tracking-wide hover:underline ${styles.btn}`}>
+            {action}
+          </Link>
+        )}
+        {action && !actionHref && (
           <button className={`mt-2 text-[11px] font-bold uppercase tracking-wide hover:underline ${styles.btn}`}>
             {action}
           </button>
@@ -111,7 +119,7 @@ export default async function DashboardPage() {
       .eq("status", "active"),
     supabase
       .from("vehicles")
-      .select("make, model, registration, registration_expiry")
+      .select("id, make, model, registration, registration_expiry")
       .lte("registration_expiry", in30Days)
       .gte("registration_expiry", today)
       .neq("status", "inactive"),
@@ -292,13 +300,14 @@ export default async function DashboardPage() {
                       action="Kontaktiraj klijenta"
                     />
                   ))}
-                  {expiringRegs?.slice(0, 3).map((v: any, i: number) => (
+                  {expiringRegs?.slice(0, 3).map((v: any) => (
                     <AlertItem
-                      key={i}
+                      key={v.id}
                       type="warning"
                       title="Registracija ističe uskoro"
                       message={`${v.make} ${v.model} (${v.registration}) — ističe ${v.registration_expiry}`}
                       action="Obnovi registraciju"
+                      actionHref={`/dashboard/fleet/${v.id}?expense=insurance`}
                     />
                   ))}
                 </div>
