@@ -9,6 +9,7 @@ const TYPES = [
   { value: "fuel", label: "Gorivo" },
   { value: "maintenance", label: "Servis" },
   { value: "insurance", label: "Osiguranje" },
+  { value: "registration", label: "Registracija" },
   { value: "washing", label: "Pranje" },
   { value: "tyre", label: "Gume" },
   { value: "other", label: "Ostalo" },
@@ -24,6 +25,7 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
   const supabase = createClient();
   const [vehicleCount, setVehicleCount] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [splitMonths, setSplitMonths] = useState(1);
   const [form, setForm] = useState({
     description: "",
     type: "other",
@@ -50,6 +52,7 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
       date: new Date().toISOString().slice(0, 10),
     });
     setPhoto(null);
+    setSplitMonths(1);
   };
 
   const save = async () => {
@@ -94,18 +97,26 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
         return;
       }
 
-      // 5. Fan out into N child vehicle_expenses rows
-      const perVehicle = Number((form.total_amount / vehicles.length).toFixed(2));
-      const rows = vehicles.map((v) => ({
-        vehicle_id: v.id,
-        date: form.date,
-        type: form.type,
-        description: form.description,
-        vendor: form.vendor || null,
-        amount: perVehicle,
-        image_url: imagePath,
-        global_expense_id: parent.id,
-      }));
+      // 5. Fan out into N child vehicle_expenses rows (with optional monthly split)
+      const months = Math.max(1, splitMonths);
+      const perVehiclePerMonth = Number((form.total_amount / vehicles.length / months).toFixed(2));
+      const baseDate = new Date(form.date);
+      const rows = vehicles.flatMap((v) =>
+        Array.from({ length: months }, (_, i) => {
+          const d = new Date(baseDate);
+          d.setMonth(d.getMonth() + i);
+          return {
+            vehicle_id: v.id,
+            date: d.toISOString().slice(0, 10),
+            type: form.type,
+            description: form.description,
+            vendor: form.vendor || null,
+            amount: perVehiclePerMonth,
+            image_url: imagePath,
+            global_expense_id: parent.id,
+          };
+        })
+      );
 
       const { error: childErr } = await supabase.from("vehicle_expenses").insert(rows);
       if (childErr) {
@@ -230,6 +241,36 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
               onChange={(e) => setForm({ ...form, vendor: e.target.value })}
               className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]"
             />
+          </div>
+
+          {/* Monthly split */}
+          <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Raspodijeli po miesecima</span>
+              <button
+                type="button"
+                onClick={() => setSplitMonths(v => v <= 1 ? 2 : 1)}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${splitMonths > 1 ? "bg-[#003580]" : "bg-slate-300"}`}
+              >
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${splitMonths > 1 ? "translate-x-4" : "translate-x-0.5"}`} />
+              </button>
+            </div>
+            {splitMonths > 1 && (
+              <div className="flex items-center gap-3 mt-2">
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-slate-500">Broj mieseci:</label>
+                  <input
+                    type="number" min="2" max="60"
+                    value={splitMonths}
+                    onChange={e => setSplitMonths(Math.max(2, parseInt(e.target.value) || 2))}
+                    className="w-16 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#003580]/20"
+                  />
+                </div>
+                <div className="text-xs text-slate-500">
+                  = <span className="font-semibold text-[#003580]">{vehicleCount > 0 ? (form.total_amount / vehicleCount / splitMonths).toFixed(2) : "0.00"} KM</span> / vozilo / miesec
+                </div>
+              </div>
+            )}
           </div>
 
           <ReceiptUpload value={photo} onChange={setPhoto} />

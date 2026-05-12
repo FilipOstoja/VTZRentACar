@@ -9,6 +9,7 @@ const TYPES = [
   { value: "fuel", label: "Gorivo" },
   { value: "maintenance", label: "Servis" },
   { value: "insurance", label: "Osiguranje" },
+  { value: "registration", label: "Registracija" },
   { value: "washing", label: "Pranje" },
   { value: "tyre", label: "Gume" },
   { value: "other", label: "Ostalo" },

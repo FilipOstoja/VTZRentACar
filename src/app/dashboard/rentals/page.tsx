@@ -27,6 +27,7 @@ interface Rental {
 interface Vehicle {
   id: string; make: string; model: string; registration: string;
   status: string; daily_rate: number; current_km?: number;
+  persistent_damage?: { pins: DamagePin[] };
 }
 interface Client {
   id: string; full_name: string; phone?: string; email?: string; is_blacklisted: boolean;
@@ -92,6 +93,7 @@ export default function RentalsPage() {
   const [returnRental, setReturnRental]   = useState<Rental | null>(null);
   const [returnDamages, setReturnDamages] = useState<DamagePin[]>([]);
   const [returning, setReturning]         = useState(false);
+  const [syncDamagesToVehicle, setSyncDamagesToVehicle] = useState(false);
 
   const [contractPreview, setContractPreview] = useState<{ data: ContractData; clientEmail?: string } | null>(null);
 
@@ -147,7 +149,7 @@ export default function RentalsPage() {
         .select("*, vehicles(make, model, registration), clients(full_name, phone, is_blacklisted)")
         .order("created_at", { ascending: false }).limit(50),
       supabase.from("vehicles")
-        .select("id, make, model, registration, status, daily_rate, current_km")
+        .select("id, make, model, registration, status, daily_rate, current_km, persistent_damage")
         .neq("status", "inactive"),
       supabase.from("clients")
         .select("id, full_name, phone, email, is_blacklisted").eq("is_blacklisted", false).order("full_name"),
@@ -318,7 +320,7 @@ export default function RentalsPage() {
     setContractPreview({ data: contractData, clientEmail });
   };
   const openReturnModal = (rental: Rental) => {
-    setReturnRental(rental); setReturnDamages([]); setReturnModal(true);
+    setReturnRental(rental); setReturnDamages([]); setSyncDamagesToVehicle(false); setReturnModal(true);
   };
   const saveReturn = async () => {
     if (!returnRental) return;
@@ -327,8 +329,20 @@ export default function RentalsPage() {
       status: "completed",
       damage_report_in: returnDamages.length > 0 ? { pins: returnDamages } : null,
     }).eq("id", returnRental.id);
-    await supabase.from("vehicles").update({ status: "free" }).eq("id", returnRental.vehicle_id);
-    setReturning(false); setReturnModal(false); setReturnRental(null); setReturnDamages([]); load();
+
+    if (syncDamagesToVehicle && returnDamages.length > 0) {
+      const { data: veh } = await supabase
+        .from("vehicles").select("persistent_damage").eq("id", returnRental.vehicle_id).single();
+      const existing: DamagePin[] = (veh?.persistent_damage as { pins: DamagePin[] } | null)?.pins ?? [];
+      await supabase.from("vehicles").update({
+        status: "free",
+        persistent_damage: { pins: [...existing, ...returnDamages] },
+      }).eq("id", returnRental.vehicle_id);
+    } else {
+      await supabase.from("vehicles").update({ status: "free" }).eq("id", returnRental.vehicle_id);
+    }
+
+    setReturning(false); setReturnModal(false); setReturnRental(null); setReturnDamages([]); setSyncDamagesToVehicle(false); load();
   };
 
   const activeCount = rentals.filter((r) => r.status === "active").length;
@@ -743,6 +757,7 @@ export default function RentalsPage() {
                     onChange={setDamages}
                     vehicleMake={selectedVehicle?.make}
                     vehicleModel={selectedVehicle?.model}
+                    preExistingDamages={selectedVehicle?.persistent_damage?.pins ?? []}
                   />
                 </div>
               )}
@@ -833,17 +848,23 @@ export default function RentalsPage() {
                 preExistingDamages={returnRental.damage_report_out?.pins ?? []}
               />
             </div>
-            <div className="flex gap-3 justify-between items-center px-6 py-4 border-t border-[#E7E7E7] flex-shrink-0">
-              <div>
-                {returnDamages.length > 0 ? (
-                  <p className="text-xs text-slate-500">
-                    <span className="text-amber-600 font-semibold">{returnDamages.length}</span> nova oštećenja evidentirana
-                  </p>
-                ) : (
-                  <p className="text-xs text-slate-400">Nema novih oštećenja — vozilo vraćeno uredno</p>
-                )}
-              </div>
-              <div className="flex gap-3">
+            <div className="flex flex-col gap-3 px-6 py-4 border-t border-[#E7E7E7] flex-shrink-0">
+              {returnDamages.length > 0 ? (
+                <label className="flex items-center gap-2.5 cursor-pointer select-none p-2.5 rounded-lg bg-amber-50 border border-amber-200">
+                  <input
+                    type="checkbox"
+                    checked={syncDamagesToVehicle}
+                    onChange={(e) => setSyncDamagesToVehicle(e.target.checked)}
+                    className="w-4 h-4 rounded accent-amber-600"
+                  />
+                  <span className="text-xs text-amber-800 font-semibold">
+                    Dodaj {returnDamages.length} nova oštećenja u stanje vozila (vidljivo u Stanje vozila)
+                  </span>
+                </label>
+              ) : (
+                <p className="text-xs text-slate-400">Nema novih oštećenja — vozilo vraćeno uredno</p>
+              )}
+              <div className="flex gap-3 justify-end">
                 <button onClick={() => setReturnModal(false)} className="btn-secondary">Odustani</button>
                 <button onClick={saveReturn} disabled={returning} className="btn-primary">
                   {returning ? "Zatvaranje..." : "Zatvori najam"}

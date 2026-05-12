@@ -307,7 +307,7 @@ export default async function DashboardPage() {
                       title="Registracija ističe uskoro"
                       message={`${v.make} ${v.model} (${v.registration}) — ističe ${v.registration_expiry}`}
                       action="Obnovi registraciju"
-                      actionHref={`/dashboard/fleet/${v.id}?expense=insurance`}
+                      actionHref={`/dashboard/fleet/${v.id}?expense=registration`}
                     />
                   ))}
                 </div>

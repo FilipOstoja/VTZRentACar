@@ -11,7 +11,7 @@ import {
 
 // ── Types ──────────────────────────────────────────────────────
 type Period = "this_month" | "last_month" | "3m" | "ytd" | "all";
-type CategoryFilter = "all" | "fuel" | "maintenance" | "insurance" | "washing" | "tyre" | "other";
+type CategoryFilter = "all" | "fuel" | "maintenance" | "insurance" | "washing" | "tyre" | "other" | "registration";
 
 interface Vehicle {
   id: string; make: string; model: string; registration: string;
@@ -32,11 +32,11 @@ const PERIOD_LABELS: Record<Period, string> = {
 };
 const CATEGORY_LABELS: Record<string, string> = {
   fuel: "Gorivo", maintenance: "Servis", insurance: "Osiguranje",
-  washing: "Pranje", tyre: "Gume", other: "Ostalo",
+  washing: "Pranje", tyre: "Gume", other: "Ostalo", registration: "Registracija",
 };
 const CATEGORY_COLORS: Record<string, string> = {
   fuel: "#f97316", maintenance: "#3b82f6", insurance: "#8b5cf6",
-  washing: "#06b6d4", tyre: "#64748b", other: "#94a3b8",
+  washing: "#06b6d4", tyre: "#64748b", other: "#94a3b8", registration: "#10b981",
 };
 const DOW_LABELS = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"];
 
