@@ -335,7 +335,7 @@ export default function RentalsPage() {
 
   return (
     <div className="min-h-screen bg-[#F7F9FC]">
-      <div className="p-6 max-w-[1440px] mx-auto space-y-6">
+      <div className="p-4 sm:p-6 max-w-[1440px] mx-auto space-y-4 sm:space-y-6">
 
         {/* Header */}
         <div className="flex items-end justify-between">

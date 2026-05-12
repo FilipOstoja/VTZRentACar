@@ -199,15 +199,15 @@ export default function FleetPage() {
 
   return (
     <div className="min-h-screen bg-[#F7F9FC]">
-      <div className="p-6 max-w-[1440px] mx-auto space-y-6">
+      <div className="p-4 sm:p-6 max-w-[1440px] mx-auto space-y-4 sm:space-y-6">
 
         {/* ── Page header ── */}
-        <div className="flex items-end justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-[#003580] tracking-tight">Vozni park</h1>
             <p className="text-sm text-slate-500 mt-0.5">Praćenje inventara i dostupnosti vozila</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setShowGlobalExpense(true)}
               className="flex items-center gap-2 px-4 py-2 border border-amber-400 text-amber-700 rounded-lg text-sm font-semibold bg-amber-50 hover:bg-amber-100 transition-colors shadow-sm"

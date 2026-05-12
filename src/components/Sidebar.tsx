@@ -83,6 +83,7 @@ export default function Sidebar() {
   const [role, setRole] = useState<"admin" | "agent">("agent");
   const [userName, setUserName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -102,6 +103,9 @@ export default function Sidebar() {
     fetchProfile();
   }, []);
 
+  // Close drawer on route change
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push("/login");
@@ -109,14 +113,25 @@ export default function Sidebar() {
 
   const visibleItems = navItems.filter((item) => !item.adminOnly || role === "admin");
 
-  return (
-    <aside className="w-60 bg-[#F5F7FA] border-r border-[#E7E7E7] flex flex-col h-screen sticky top-0 overflow-y-auto">
-      {/* Logo */}
-      <div className="px-5 pt-5 pb-4">
-        <h1 className="text-lg font-black text-[#003580] leading-tight tracking-tight">VTZ Rent-a-Car</h1>
-        <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">
-          Fleet Management System
-        </p>
+  const sidebarContent = (
+    <aside className="w-60 bg-[#F5F7FA] flex flex-col h-full">
+      {/* Logo + mobile close button */}
+      <div className="px-5 pt-5 pb-4 flex items-start justify-between">
+        <div>
+          <h1 className="text-lg font-black text-[#003580] leading-tight tracking-tight">VTZ Rent-a-Car</h1>
+          <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">
+            Fleet Management System
+          </p>
+        </div>
+        <button
+          className="lg:hidden ml-2 mt-0.5 p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Zatvori meni"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
 
       {/* Create Reservation CTA */}
@@ -133,7 +148,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-2 space-y-0.5">
+      <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
         {loading ? (
           <div className="px-4 py-2 text-xs text-slate-400">Učitavanje...</div>
         ) : (
@@ -181,7 +196,6 @@ export default function Sidebar() {
           Odjava
         </button>
 
-        {/* User chip */}
         {!loading && (
           <div className="flex items-center gap-3 px-3 py-2.5 mt-1 rounded-lg bg-white border border-[#E7E7E7] shadow-sm">
             <div className="w-7 h-7 rounded-full bg-[#003580] flex items-center justify-center flex-shrink-0">
@@ -204,5 +218,43 @@ export default function Sidebar() {
         )}
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar — always visible, in-flow */}
+      <div className="hidden lg:flex w-60 flex-shrink-0 border-r border-[#E7E7E7] sticky top-0 h-screen overflow-y-auto">
+        {sidebarContent}
+      </div>
+
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/40 z-40"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile slide-in drawer */}
+      <div
+        className={clsx(
+          "lg:hidden fixed top-0 left-0 h-full z-50 shadow-2xl border-r border-[#E7E7E7] transition-transform duration-300 ease-in-out",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        {sidebarContent}
+      </div>
+
+      {/* Mobile hamburger button */}
+      <button
+        className="lg:hidden fixed top-3.5 left-4 z-30 w-9 h-9 bg-[#003580] text-white rounded-lg flex items-center justify-center shadow-md active:scale-95 transition-transform"
+        onClick={() => setMobileOpen(true)}
+        aria-label="Otvori meni"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </>
   );
 }

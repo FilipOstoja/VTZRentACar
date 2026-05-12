@@ -65,15 +65,15 @@ export default function ClientsPage() {
 
   return (
     <div className="min-h-screen bg-[#F7F9FC]">
-      <div className="p-6 max-w-[1440px] mx-auto space-y-6">
+      <div className="p-4 sm:p-6 max-w-[1440px] mx-auto space-y-4 sm:space-y-6">
 
         {/* Header */}
-        <div className="flex items-end justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-[#003580] tracking-tight">Baza klijenata</h1>
             <p className="text-sm text-slate-500 mt-0.5">{clients.length} klijenata ukupno</p>
           </div>
-          <button onClick={openAdd} className="btn-primary">
+          <button onClick={openAdd} className="btn-primary self-start sm:self-auto">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
@@ -83,12 +83,12 @@ export default function ClientsPage() {
 
         {/* Filters */}
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative">
+          <div className="relative flex-1 min-w-[200px]">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input
-              className="pl-9 pr-4 py-2 bg-white border border-[#E7E7E7] rounded-lg text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580] transition-all w-64 shadow-sm"
+              className="pl-9 pr-4 py-2 bg-white border border-[#E7E7E7] rounded-lg text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580] transition-all w-full shadow-sm"
               placeholder="Pretraži klijente..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
