@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import clsx from "clsx";
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -126,6 +126,8 @@ export default function AnalyticsPage() {
   const [vehicleId, setVehicleId] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"profit" | "revenue" | "costs">("profit");
   const [drillCategory, setDrillCategory] = useState<string | null>(null);
+  const [showCosts, setShowCosts] = useState(false);
+  const [yearlyExpenses, setYearlyExpenses] = useState<Expense[]>([]);
 
   // Auth gate
   useEffect(() => {
@@ -150,14 +152,16 @@ export default function AnalyticsPage() {
       const in30 = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
       const prev = prevPeriodRange(period);
 
-      const [vRes, rRes, eRes, prevRes, allRes] = await Promise.all([
+      const yearStart = `${new Date().getFullYear()}-01-01`;
+      const [vRes, rRes, eRes, prevRes, allRes, yearExpRes] = await Promise.all([
         supabase.from("vehicles").select("id, make, model, registration, status, daily_rate, purchase_price, current_km, registration_expiry"),
         supabase.from("rentals").select("id, vehicle_id, start_date, end_date, total_amount, status").gte("start_date", from).lte("start_date", to).neq("status", "cancelled"),
         supabase.from("vehicle_expenses").select("id, vehicle_id, date, type, amount").gte("date", from).lte("date", to),
         prev
           ? supabase.from("rentals").select("id, vehicle_id, start_date, end_date, total_amount, status").gte("start_date", prev.from).lte("start_date", prev.to).neq("status", "cancelled")
           : Promise.resolve({ data: [] }),
-        supabase.from("rentals").select("id, vehicle_id, total_amount, status").neq("status", "cancelled"),
+        supabase.from("rentals").select("id, vehicle_id, start_date, total_amount, status").neq("status", "cancelled"),
+        supabase.from("vehicle_expenses").select("id, vehicle_id, date, type, amount").gte("date", yearStart),
       ]);
 
       const vs = vRes.data || [];
@@ -166,6 +170,7 @@ export default function AnalyticsPage() {
       setExpenses(eRes.data || []);
       setPrevRentals((prevRes as any).data || []);
       setAllTimeRentals(allRes.data || []);
+      setYearlyExpenses((yearExpRes as any).data || []);
 
       // Build alerts
       const overdue = (rRes.data || []).filter((r: Rental) => r.status === "active" && r.end_date < today);
@@ -273,6 +278,21 @@ export default function AnalyticsPage() {
       .sort((a, b) => (b.costPerKm || 0) - (a.costPerKm || 0))
       .map(v => ({ name: v.registration, value: Number((v.costPerKm || 0).toFixed(3)) })),
     [vehicleStats]);
+
+  const yearlyMonthlyData = useMemo(() => {
+    const year = new Date().getFullYear();
+    const labels = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"];
+    return labels.map((label, i) => {
+      const key = `${year}-${String(i + 1).padStart(2, "0")}`;
+      const revenue = allTimeRentals
+        .filter(r => r.start_date?.startsWith(key))
+        .reduce((s, r) => s + Number(r.total_amount || 0), 0);
+      const costs = yearlyExpenses
+        .filter(e => e.date.startsWith(key))
+        .reduce((s, e) => s + Number(e.amount || 0), 0);
+      return { label, revenue, costs };
+    });
+  }, [allTimeRentals, yearlyExpenses]);
 
   if (role !== "admin") {
     return <div className="min-h-screen flex items-center justify-center bg-[#F7F9FC]"><p className="text-slate-400 text-sm">Učitavanje...</p></div>;
@@ -424,30 +444,59 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-center py-20 text-slate-400 text-sm">Učitavanje podataka...</div>
         ) : (
           <>
-            {/* ── Revenue trend ── */}
+            {/* ── Monthly Revenue bar chart (Riderly-style) ── */}
             <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5">
-              <div className="mb-4">
-                <h2 className="text-base font-semibold text-slate-800">Prihod · Troškovi · Profit</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Mjesečni trend kroz odabrani period</p>
-              </div>
-              {monthlySeries.length === 0 ? (
-                <div className="py-12 text-center text-sm text-slate-400">Nema podataka za ovaj period</div>
-              ) : (
-                <div className="h-64 sm:h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={monthlySeries}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E7E7E7" />
-                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#64748b" }} />
-                      <YAxis tick={{ fontSize: 11, fill: "#64748b" }} tickFormatter={v => `€${(v / 1000).toFixed(0)}k`} />
-                      <Tooltip formatter={(v: number) => fmtFull(v)} contentStyle={{ borderRadius: 8, border: "1px solid #E7E7E7", fontSize: 12 }} />
-                      <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <Line type="monotone" dataKey="revenue" name="Prihod" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3 }} />
-                      <Line type="monotone" dataKey="costs" name="Troškovi" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 3 }} />
-                      <Line type="monotone" dataKey="profit" name="Profit" stroke="#003580" strokeWidth={2.5} strokeDasharray="5 3" dot={{ r: 3 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
+              <div className="flex items-start sm:items-center justify-between gap-3 mb-5">
+                <div>
+                  <h2 className="text-base font-semibold text-slate-800">Miesečni prihod {new Date().getFullYear()}</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Prihod po miesecu — uključite toggle za usporedbu s troškovima</p>
                 </div>
-              )}
+                <div className="flex items-center gap-2.5 flex-shrink-0">
+                  <span className="text-xs text-slate-500 whitespace-nowrap">Prikaži troškove:</span>
+                  <button
+                    onClick={() => setShowCosts(v => !v)}
+                    className={clsx(
+                      "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none",
+                      showCosts ? "bg-[#003580]" : "bg-slate-200"
+                    )}
+                  >
+                    <span className={clsx(
+                      "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform",
+                      showCosts ? "translate-x-6" : "translate-x-1"
+                    )} />
+                  </button>
+                </div>
+              </div>
+              <div className="h-64 sm:h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={yearlyMonthlyData} barGap={3} barCategoryGap={showCosts ? "25%" : "35%"}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f4f8" vertical={false} />
+                    <XAxis dataKey="label" tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} tickFormatter={v => v >= 1000 ? `€${(v / 1000).toFixed(0)}k` : `€${v}`} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      formatter={(v: number, name: string) => [fmtFull(v), name === "revenue" ? "Prihod" : "Troškovi"]}
+                      contentStyle={{ borderRadius: 8, border: "1px solid #E7E7E7", fontSize: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
+                      cursor={{ fill: "#f8fafc" }}
+                    />
+                    <Bar dataKey="revenue" name="revenue" fill="#003580" radius={[3, 3, 0, 0]} />
+                    {showCosts && (
+                      <Bar dataKey="costs" name="costs" fill="#ef4444" radius={[3, 3, 0, 0]} opacity={0.85} />
+                    )}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex items-center gap-5 mt-3 text-[11px] text-slate-500">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-sm bg-[#003580]" />
+                  Prihod
+                </span>
+                {showCosts && (
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-sm bg-red-500" />
+                    Troškovi
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* ── Day-of-week + Cost breakdown ── */}
