@@ -1,0 +1,11 @@
+Model Information:
+* title:	Volkswagen van T6
+* source:	https://sketchfab.com/3d-models/volkswagen-van-t6-b36c0e9bf97b479f9193cce337f4d4c2
+* author:	IrisProcess (https://sketchfab.com/IrisProcess)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Volkswagen van T6" (https://sketchfab.com/3d-models/volkswagen-van-t6-b36c0e9bf97b479f9193cce337f4d4c2) by IrisProcess (https://sketchfab.com/IrisProcess) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

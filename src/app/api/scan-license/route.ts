@@ -1,0 +1,68 @@
+import { NextRequest, NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+export async function POST(req: NextRequest) {
+  const { imageBase64 } = await req.json();
+  if (!imageBase64) {
+    return NextResponse.json({ error: "No image provided" }, { status: 400 });
+  }
+
+  // Strip data URL prefix, keep only base64 content
+  const base64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+  const mediaType = imageBase64.match(/^data:(image\/\w+);base64,/)?.[1] as
+    | "image/jpeg" | "image/png" | "image/webp" | "image/gif" | undefined
+    ?? "image/jpeg";
+
+  const message = await client.messages.create({
+    model: "claude-haiku-4-5",
+    max_tokens: 256,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "image",
+            source: { type: "base64", media_type: mediaType, data: base64 },
+          },
+          {
+            type: "text",
+            text: `This is a photo of a driving license. The card may be rotated or at an angle — read all text regardless of orientation.
+
+IGNORE completely: country names, document type labels like "VOZAČKA DOZVOLA", "DRIVING LICENCE", "PERMIS DE CONDUIRE", "FÜHRERSCHEIN", flag symbols, and any decorative/header text.
+
+STRATEGY 1 — EU/Balkan license (numbered fields, used by all EU countries + BiH, Serbia, Montenegro, Croatia, etc.):
+Find the small number printed before each data field and read the value after it:
+- "1." = SURNAME (single all-caps word, e.g. OSTOJIĆ, MÜLLER, ROSSI)
+- "2." = FIRST NAME (single all-caps word, e.g. FILIP, ANNA, MARCO)
+- "3." = DATE OF BIRTH (DD.MM.YYYY)
+- "5." = LICENSE NUMBER (alphanumeric, e.g. 1E940T1E2, B1234567)
+
+STRATEGY 2 — Non-EU license (UK, US, Turkish, etc.) if no numbered fields exist:
+Look for labeled fields: Surname/Last Name, Given Name/First Name, Date of Birth/DOB, License No/DL Number.
+
+Return ONLY this JSON, nothing else — use null for anything not found:
+{
+  "first_name": "...",
+  "last_name": "...",
+  "date_of_birth": "DD.MM.YYYY or as printed",
+  "license_number": "...",
+  "id_number": null
+}`,
+          },
+        ],
+      },
+    ],
+  });
+
+  const raw = message.content[0].type === "text" ? message.content[0].text : "";
+
+  try {
+    const extracted = JSON.parse(raw.replace(/```json\n?|\n?```/g, "").trim());
+    return NextResponse.json({ extracted });
+  } catch {
+    console.error("[scan-license] Failed to parse Claude response:", raw);
+    return NextResponse.json({ error: "Could not parse response", raw }, { status: 422 });
+  }
+}
