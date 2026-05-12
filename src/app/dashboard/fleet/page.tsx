@@ -449,7 +449,7 @@ export default function FleetPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-200">
-                      {["Vozilo", "Registracija", "God.", "Km", "€/dan", "Reg. ističe", "Status", ""].map((h) => (
+                      {["Vozilo", "Registracija", "God.", "Km", "KM/dan", "Reg. ističe", "Status", ""].map((h) => (
                         <th key={h} className="px-4 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                           {h}
                         </th>
@@ -467,7 +467,7 @@ export default function FleetPage() {
                         <td className="px-4 py-3 text-sm text-slate-500">{v.year}</td>
                         <td className="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">{v.current_km?.toLocaleString()} km</td>
                         <td className="px-4 py-3 text-sm font-semibold text-slate-700 whitespace-nowrap">
-                          €{v.daily_rate}<span className="font-normal text-slate-400">/d</span>
+                          {v.daily_rate} <span className="font-normal text-slate-400">KM/d</span>
                         </td>
                         <td className="px-4 py-3 text-xs whitespace-nowrap">
                           {v.registration_expiry ? (
@@ -625,9 +625,9 @@ export default function FleetPage() {
                 { label: "Registracija", key: "registration", type: "text", placeholder: "A12-K-345" },
                 { label: "Broj šasije", key: "chassis_number", type: "text", placeholder: "VIN..." },
                 { label: "Boja", key: "color", type: "text", placeholder: "Bijela" },
-                { label: "Dnevna tarifa (€)", key: "daily_rate", type: "number", placeholder: "50" },
+                { label: "Dnevna tarifa (KM)", key: "daily_rate", type: "number", placeholder: "50" },
                 { label: "Trenutna km", key: "current_km", type: "number", placeholder: "0" },
-                { label: "Nabavna cijena (€)", key: "purchase_price", type: "number", placeholder: "25000" },
+                { label: "Nabavna cijena (KM)", key: "purchase_price", type: "number", placeholder: "25000" },
                 { label: "Registracija ističe", key: "registration_expiry", type: "date", placeholder: "" },
               ].map((f) => (
                 <FieldInput

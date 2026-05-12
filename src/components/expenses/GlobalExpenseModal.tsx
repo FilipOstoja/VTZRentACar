@@ -198,7 +198,7 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
-                Ukupan iznos (€) *
+                Ukupan iznos (KM) *
               </label>
               <input
                 type="number"
@@ -214,7 +214,7 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
                 Po vozilu
               </label>
               <div className="w-full bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-[#003580] text-sm font-bold">
-                €{perVehicle.toFixed(2)}
+                {perVehicle.toFixed(2)} KM
               </div>
             </div>
           </div>

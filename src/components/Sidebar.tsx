@@ -117,12 +117,12 @@ export default function Sidebar() {
     <aside className="w-60 bg-[#F5F7FA] flex flex-col h-full">
       {/* Logo + mobile close button */}
       <div className="px-5 pt-5 pb-4 flex items-start justify-between">
-        <div>
+        <Link href="/dashboard" className="block hover:opacity-75 transition-opacity">
           <h1 className="text-lg font-black text-[#003580] leading-tight tracking-tight">VTZ Rent-a-Car</h1>
           <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">
             Fleet Management System
           </p>
-        </div>
+        </Link>
         <button
           className="lg:hidden ml-2 mt-0.5 p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
           onClick={() => setMobileOpen(false)}

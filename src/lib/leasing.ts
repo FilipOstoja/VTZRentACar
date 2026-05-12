@@ -109,13 +109,8 @@ export function calculateLeasing(inputs: LeasingInputs): LeasingResults {
   };
 }
 
-export function formatCurrency(value: number, currency = "EUR"): string {
-  return new Intl.NumberFormat("hr-HR", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+export function formatCurrency(value: number, _currency = "KM"): string {
+  return `${new Intl.NumberFormat("hr-HR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} KM`;
 }
 
 export function formatPct(value: number): string {

@@ -262,7 +262,7 @@ export default function VehicleDetailPage() {
                 {[
                   { label: "Registracija", value: vehicle.registration, mono: true },
                   { label: "Godište", value: String(vehicle.year) },
-                  { label: "Dnevna tarifa", value: `€${vehicle.daily_rate}/dan` },
+                  { label: "Dnevna tarifa", value: `${vehicle.daily_rate} KM/dan` },
                   { label: "Trenutna km", value: vehicle.current_km ? `${vehicle.current_km.toLocaleString()} km` : "—" },
                   { label: "Reg. ističe", value: vehicle.registration_expiry ?? "—", warn: vehicle.registration_expiry ? new Date(vehicle.registration_expiry) < new Date(Date.now() + 30 * 86400000) : false },
                   { label: "Boja", value: vehicle.color ?? "—" },
@@ -306,10 +306,10 @@ export default function VehicleDetailPage() {
         {/* ── Summary chips ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: "Ukupno troškova", value: `€${totalExpenses.toLocaleString("de-DE", { minimumFractionDigits: 2 })}`, color: "text-red-600" },
+            { label: "Ukupno troškova", value: `${totalExpenses.toLocaleString("de-DE", { minimumFractionDigits: 2 })} KM`, color: "text-red-600" },
             { label: "Broj stavki troškova", value: String(expenses.length), color: "text-slate-800" },
             { label: "Ukupno najma", value: String(rentals.length), color: "text-[#003580]" },
-            { label: "Prihod od najma", value: `€${rentals.reduce((s, r) => s + (isFinite(Number(r.total_amount)) ? Number(r.total_amount) : 0), 0).toLocaleString("de-DE", { minimumFractionDigits: 2 })}`, color: "text-emerald-600" },
+            { label: "Prihod od najma", value: `${rentals.reduce((s, r) => s + (isFinite(Number(r.total_amount)) ? Number(r.total_amount) : 0), 0).toLocaleString("de-DE", { minimumFractionDigits: 2 })} KM`, color: "text-emerald-600" },
           ].map((s) => (
             <div key={s.label} className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-4">
               <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">{s.label}</div>
@@ -398,7 +398,7 @@ export default function VehicleDetailPage() {
                           <td className="px-5 py-3.5 text-sm text-slate-500">{e.vendor || "—"}</td>
                           <td className="px-5 py-3.5 text-sm font-bold text-slate-800 whitespace-nowrap">
                             <div className="flex items-center justify-between gap-2">
-                              <span>€{Number(e.amount).toLocaleString("de-DE", { minimumFractionDigits: 2 })}</span>
+                              <span>{Number(e.amount).toLocaleString("de-DE", { minimumFractionDigits: 2 })} KM</span>
                               {e.image_url && (
                                 <button
                                   onClick={() => openReceipt(e.image_url)}
@@ -419,7 +419,7 @@ export default function VehicleDetailPage() {
                   <div className="px-5 py-3 bg-slate-50 border-t border-[#E7E7E7] flex items-center justify-between rounded-b-2xl">
                     <span className="text-xs text-slate-500">{expenses.length} stavki</span>
                     <span className="text-sm font-bold text-slate-800">
-                      Ukupno: €{totalExpenses.toLocaleString("de-DE", { minimumFractionDigits: 2 })}
+                      Ukupno: {totalExpenses.toLocaleString("de-DE", { minimumFractionDigits: 2 })} KM
                     </span>
                   </div>
                 </div>
@@ -457,7 +457,7 @@ export default function VehicleDetailPage() {
                           <td className="px-5 py-3.5 text-sm text-slate-500 whitespace-nowrap">{r.start_date}</td>
                           <td className="px-5 py-3.5 text-sm text-slate-500 whitespace-nowrap">{r.end_date}</td>
                           <td className="px-5 py-3.5 text-sm font-bold text-slate-800 whitespace-nowrap">
-                            {isFinite(Number(r.total_amount)) ? `€${Number(r.total_amount).toLocaleString("de-DE", { minimumFractionDigits: 2 })}` : "—"}
+                            {isFinite(Number(r.total_amount)) ? `${Number(r.total_amount).toLocaleString("de-DE", { minimumFractionDigits: 2 })} KM` : "—"}
                           </td>
                           <td className="px-5 py-3.5">
                             <span className={clsx("inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide", RENTAL_STATUS[r.status] ?? "bg-slate-100 text-slate-500")}>
@@ -498,9 +498,9 @@ export default function VehicleDetailPage() {
                 { label: "Registracija", key: "registration", type: "text" },
                 { label: "Broj šasije", key: "chassis_number", type: "text" },
                 { label: "Boja", key: "color", type: "text" },
-                { label: "Dnevna tarifa (€)", key: "daily_rate", type: "number" },
+                { label: "Dnevna tarifa (KM)", key: "daily_rate", type: "number" },
                 { label: "Trenutna km", key: "current_km", type: "number" },
-                { label: "Nabavna cijena (€)", key: "purchase_price", type: "number" },
+                { label: "Nabavna cijena (KM)", key: "purchase_price", type: "number" },
                 { label: "Registracija ističe", key: "registration_expiry", type: "date" },
               ].map((f) => (
                 <div key={f.key}>
@@ -580,9 +580,9 @@ export default function VehicleDetailPage() {
                 <input type="text" className="input" placeholder="npr. Auto Servis Petrović" value={newExpense.vendor} onChange={(e) => setNewExpense((p) => ({ ...p, vendor: e.target.value }))} />
               </div>
               <div>
-                <label className="label">Iznos (€)</label>
+                <label className="label">Iznos (KM)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pointer-events-none">€</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pointer-events-none">KM</span>
                   <input type="number" step="0.01" min="0" className="input pl-7" value={newExpense.amount} onChange={(e) => setNewExpense((p) => ({ ...p, amount: Number(e.target.value) }))} />
                 </div>
               </div>

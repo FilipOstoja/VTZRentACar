@@ -114,7 +114,7 @@ export default function QuickAddRow({ vehicles, onSaved }: Props) {
           type="number"
           step="0.01"
           min="0"
-          placeholder="€"
+          placeholder="KM"
           value={amount || ""}
           onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
           onKeyDown={(e) => e.key === "Enter" && save()}

@@ -385,7 +385,7 @@ export default function RentalsPage() {
                       <td className={clsx("table-cell", isOverdue ? "text-red-600 font-semibold" : "text-slate-500")}>{r.end_date}</td>
                       <td className="table-cell text-slate-600">{r.total_days}d</td>
                       <td className="table-cell font-semibold text-slate-800">
-                        {r.total_amount != null && isFinite(r.total_amount) ? `€${r.total_amount.toFixed(2)}` : <span className="text-slate-300">—</span>}
+                        {r.total_amount != null && isFinite(r.total_amount) ? `${r.total_amount.toFixed(2)} KM` : <span className="text-slate-300">—</span>}
                       </td>
                       <td className="table-cell">
                         {pickupCount > 0 || returnCount > 0 ? (
@@ -663,7 +663,7 @@ export default function RentalsPage() {
                     <ModalSelect value={form.vehicle_id} onChange={(e) => handleVehicleSelect(e.target.value)} disabled={!form.start_date || !form.end_date}>
                       <option value="">{!form.end_date ? "Prvo odaberite datume..." : availableVehicles.length === 0 ? "Nema slobodnih vozila" : "Odaberi vozilo..."}</option>
                       {availableVehicles.map((v) => (
-                        <option key={v.id} value={v.id}>{v.make} {v.model} — {v.registration} (€{v.daily_rate}/dan)</option>
+                        <option key={v.id} value={v.id}>{v.make} {v.model} — {v.registration} ({v.daily_rate} KM/dan)</option>
                       ))}
                     </ModalSelect>
                   </div>
@@ -691,7 +691,7 @@ export default function RentalsPage() {
                       <ModalInput type="number" value={form.pickup_km} onChange={(e) => setForm((p) => ({ ...p, pickup_km: Number(e.target.value) }))} />
                     </div>
                     <div>
-                      <ModalLabel>Depozit (€)</ModalLabel>
+                      <ModalLabel>Depozit (KM)</ModalLabel>
                       <ModalInput type="number" value={form.deposit_amount} onChange={(e) => setForm((p) => ({ ...p, deposit_amount: Number(e.target.value) }))} />
                     </div>
                   </div>
@@ -704,11 +704,17 @@ export default function RentalsPage() {
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-slate-500">Dnevna tarifa:</span>
-                        <span className="text-slate-800 font-semibold">€{dailyRate}</span>
+                        <div className="text-right">
+                          <span className="text-slate-800 font-semibold">{dailyRate} KM</span>
+                          <span className="text-slate-400 text-xs ml-1.5">≈ €{(dailyRate / 1.9583).toFixed(2)}</span>
+                        </div>
                       </div>
                       <div className="flex justify-between text-sm font-bold border-t border-[#003580]/15 pt-2 mt-2">
                         <span className="text-slate-600">Ukupno:</span>
-                        <span className="text-[#003580] text-lg">€{totalAmount.toFixed(2)}</span>
+                        <div className="text-right">
+                          <span className="text-[#003580] text-lg">{totalAmount.toFixed(2)} KM</span>
+                          <div className="text-xs text-slate-400 font-normal">≈ €{(totalAmount / 1.9583).toFixed(2)}</div>
+                        </div>
                       </div>
                     </div>
                   )}
