@@ -21,7 +21,7 @@ interface Rental {
   status: string;
   damage_report_out?: { pins: DamagePin[] } | null;
   damage_report_in?: { pins: DamagePin[] } | null;
-  vehicles?: { make: string; model: string; registration: string };
+  vehicles?: { make: string; model: string; registration: string; persistent_damage?: { pins: DamagePin[] } };
   clients?: { full_name: string; phone?: string; is_blacklisted: boolean };
 }
 interface Vehicle {
@@ -146,7 +146,7 @@ export default function RentalsPage() {
     setLoading(true);
     const [{ data: r }, { data: v }, { data: c }] = await Promise.all([
       supabase.from("rentals")
-        .select("*, vehicles(make, model, registration), clients(full_name, phone, is_blacklisted)")
+        .select("*, vehicles(make, model, registration, persistent_damage), clients(full_name, phone, is_blacklisted)")
         .order("created_at", { ascending: false }).limit(50),
       supabase.from("vehicles")
         .select("id, make, model, registration, status, daily_rate, current_km, persistent_damage")
@@ -845,7 +845,11 @@ export default function RentalsPage() {
                 onChange={setReturnDamages}
                 vehicleMake={returnRental.vehicles?.make}
                 vehicleModel={returnRental.vehicles?.model}
-                preExistingDamages={returnRental.damage_report_out?.pins ?? []}
+                preExistingDamages={
+                  returnRental.damage_report_out?.pins ??
+                  returnRental.vehicles?.persistent_damage?.pins ??
+                  []
+                }
               />
             </div>
             <div className="flex flex-col gap-3 px-6 py-4 border-t border-[#E7E7E7] flex-shrink-0">
