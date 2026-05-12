@@ -338,12 +338,12 @@ export default function RentalsPage() {
       <div className="p-4 sm:p-6 max-w-[1440px] mx-auto space-y-4 sm:space-y-6">
 
         {/* Header */}
-        <div className="flex items-end justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-[#003580] tracking-tight">Kratkoročni najam</h1>
             <p className="text-sm text-slate-500 mt-0.5">{activeCount} aktivnih najma</p>
           </div>
-          <button onClick={openModal} className="btn-primary">
+          <button onClick={openModal} className="btn-primary self-start sm:self-auto">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
@@ -773,15 +773,13 @@ export default function RentalsPage() {
             </div>
 
             {/* Footer */}
-            <div className="flex gap-3 justify-between items-center px-6 py-4 border-t border-[#E7E7E7] flex-shrink-0">
-              <div>
-                {step === 2 && damages.length > 0 && (
-                  <p className="text-xs text-slate-500">
-                    <span className="text-amber-600 font-semibold">{damages.length}</span> oštećenje(a) zabilježeno
-                  </p>
-                )}
-              </div>
-              <div className="flex gap-3">
+            <div className="flex flex-col gap-2 px-4 sm:px-6 py-4 border-t border-[#E7E7E7] flex-shrink-0">
+              {step === 2 && damages.length > 0 && (
+                <p className="text-xs text-slate-500">
+                  <span className="text-amber-600 font-semibold">{damages.length}</span> oštećenje(a) zabilježeno
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2 justify-end">
                 <button onClick={() => setShowModal(false)} className="btn-secondary">Odustani</button>
                 {step === 1 ? (
                   <button onClick={() => setStep(2)} disabled={!step1Valid} className="btn-primary">
@@ -791,7 +789,7 @@ export default function RentalsPage() {
                     </svg>
                   </button>
                 ) : (
-                  <div className="flex gap-2">
+                  <>
                     <button onClick={() => setStep(1)} className="btn-secondary">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="15 18 9 12 15 6"/>
@@ -801,14 +799,14 @@ export default function RentalsPage() {
                     <button onClick={save} disabled={saving} className="btn-secondary">
                       {saving ? "Kreiranje..." : "Kreiraj najam"}
                     </button>
-                    <button onClick={saveAndDownload} disabled={saving} className="btn-primary flex items-center gap-2">
+                    <button onClick={saveAndDownload} disabled={saving} className="btn-primary">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
                         <line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/>
                       </svg>
-                      {saving ? "Generiranje..." : "Kreiraj + Ugovor PDF"}
+                      {saving ? "Generiranje..." : "Kreiraj + PDF"}
                     </button>
-                  </div>
+                  </>
                 )}
               </div>
             </div>
