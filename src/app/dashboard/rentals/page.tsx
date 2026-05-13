@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { CarDamageInspector, DamagePin } from "@/components/CarDamageInspector";
 import ContractPreviewModal from "@/components/ContractPreviewModal";
+import RentalDetailsModal from "@/components/RentalDetailsModal";
 import clsx from "clsx";
 import type { ContractData } from "@/components/RentalContractPDF";
 
@@ -14,11 +15,14 @@ interface Rental {
   start_date: string;
   end_date: string;
   pickup_km?: number;
+  return_km?: number | null;
   daily_rate: number;
   total_days?: number;
   total_amount?: number;
   deposit_amount?: number;
   status: string;
+  pickup_type?: "walk_in" | "airport";
+  flight_number?: string | null;
   damage_report_out?: { pins: DamagePin[] } | null;
   damage_report_in?: { pins: DamagePin[] } | null;
   vehicles?: { make: string; model: string; registration: string; persistent_damage?: { pins: DamagePin[] } };
@@ -92,10 +96,13 @@ export default function RentalsPage() {
   const [returnModal, setReturnModal]     = useState(false);
   const [returnRental, setReturnRental]   = useState<Rental | null>(null);
   const [returnDamages, setReturnDamages] = useState<DamagePin[]>([]);
+  const [returnKm, setReturnKm]           = useState<number>(0);
   const [returning, setReturning]         = useState(false);
   const [syncDamagesToVehicle, setSyncDamagesToVehicle] = useState(false);
 
   const [contractPreview, setContractPreview] = useState<{ data: ContractData; clientEmail?: string } | null>(null);
+
+  const [detailsRental, setDetailsRental] = useState<Rental | null>(null);
 
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -323,13 +330,18 @@ export default function RentalsPage() {
     setContractPreview({ data: contractData, clientEmail });
   };
   const openReturnModal = (rental: Rental) => {
-    setReturnRental(rental); setReturnDamages([]); setSyncDamagesToVehicle(false); setReturnModal(true);
+    setReturnRental(rental);
+    setReturnDamages([]);
+    setReturnKm(rental.pickup_km ?? 0);
+    setSyncDamagesToVehicle(false);
+    setReturnModal(true);
   };
   const saveReturn = async () => {
     if (!returnRental) return;
     setReturning(true);
     await supabase.from("rentals").update({
       status: "completed",
+      return_km: returnKm,
       damage_report_in: returnDamages.length > 0 ? { pins: returnDamages } : null,
     }).eq("id", returnRental.id);
 
@@ -339,13 +351,17 @@ export default function RentalsPage() {
       const existing: DamagePin[] = (veh?.persistent_damage as { pins: DamagePin[] } | null)?.pins ?? [];
       await supabase.from("vehicles").update({
         status: "free",
+        current_km: returnKm,
         persistent_damage: { pins: [...existing, ...returnDamages] },
       }).eq("id", returnRental.vehicle_id);
     } else {
-      await supabase.from("vehicles").update({ status: "free" }).eq("id", returnRental.vehicle_id);
+      await supabase.from("vehicles").update({
+        status: "free",
+        current_km: returnKm,
+      }).eq("id", returnRental.vehicle_id);
     }
 
-    setReturning(false); setReturnModal(false); setReturnRental(null); setReturnDamages([]); setSyncDamagesToVehicle(false); load();
+    setReturning(false); setReturnModal(false); setReturnRental(null); setReturnDamages([]); setReturnKm(0); setSyncDamagesToVehicle(false); load();
   };
 
   const activeCount = rentals.filter((r) => r.status === "active").length;
@@ -427,12 +443,20 @@ export default function RentalsPage() {
                       </td>
                       <td className="table-cell">
                         {r.status === "active" && (
-                          <button
-                            onClick={() => openReturnModal(r)}
-                            className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors font-semibold whitespace-nowrap"
-                          >
-                            Zatvori
-                          </button>
+                          <div className="flex gap-1.5 justify-end">
+                            <button
+                              onClick={() => setDetailsRental(r)}
+                              className="text-xs bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors font-semibold whitespace-nowrap"
+                            >
+                              Detalji
+                            </button>
+                            <button
+                              onClick={() => openReturnModal(r)}
+                              className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors font-semibold whitespace-nowrap"
+                            >
+                              Zatvori
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -919,6 +943,19 @@ export default function RentalsPage() {
         />
       )}
 
+      {/* ── Rental details modal ── */}
+      {detailsRental && (
+        <RentalDetailsModal
+          rental={detailsRental}
+          onClose={() => setDetailsRental(null)}
+          onCloseRental={() => {
+            const r = detailsRental;
+            setDetailsRental(null);
+            openReturnModal(r);
+          }}
+        />
+      )}
+
       {/* ── Return inspection modal ── */}
       {returnModal && returnRental && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
@@ -937,9 +974,43 @@ export default function RentalsPage() {
                 </svg>
               </button>
             </div>
-            <div className="overflow-y-auto flex-1 px-6 py-5">
+            <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+              {/* Kilometraža capture */}
+              <div className="bg-slate-50 border border-[#E7E7E7] rounded-xl p-4">
+                <ModalLabel>Kilometraža</ModalLabel>
+                <div className="flex items-baseline justify-between text-sm mb-3">
+                  <span className="text-slate-500">Pri preuzimanju:</span>
+                  <span className="font-mono font-semibold text-slate-700">
+                    {(returnRental.pickup_km ?? 0).toLocaleString("hr-HR")} km
+                  </span>
+                </div>
+                <ModalLabel>
+                  Kilometraža pri vraćanju <span className="text-red-400">*</span>
+                </ModalLabel>
+                <ModalInput
+                  type="number"
+                  min={returnRental.pickup_km ?? 0}
+                  value={returnKm || ""}
+                  onChange={(e) => setReturnKm(Number(e.target.value))}
+                  placeholder={String(returnRental.pickup_km ?? 0)}
+                />
+                {returnKm > 0 && returnKm >= (returnRental.pickup_km ?? 0) && (
+                  <p className="text-[11px] text-emerald-700 mt-1.5 font-medium">
+                    +{(returnKm - (returnRental.pickup_km ?? 0)).toLocaleString("hr-HR")} km u ovom najmu
+                  </p>
+                )}
+                {returnKm > 0 && returnKm < (returnRental.pickup_km ?? 0) && (
+                  <p className="text-[11px] text-red-600 mt-1.5 font-medium">
+                    Vraćena kilometraža ne može biti manja od polazne
+                  </p>
+                )}
+                <p className="text-[11px] text-slate-400 mt-2">
+                  Postaviće se kao polazna kilometraža za sljedeći najam ovog vozila
+                </p>
+              </div>
+
               {(returnRental.damage_report_out?.pins?.length ?? 0) > 0 && (
-                <div className="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-slate-500 leading-relaxed">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-slate-500 leading-relaxed">
                   <span className="text-blue-600 font-semibold">Plavi markeri</span> = oštećenja evidentirana pri preuzimanju.
                   {" "}Kliknite na auto da označite <span className="text-amber-600 font-semibold">nova oštećenja</span> pronađena pri povratku.
                 </div>
@@ -974,7 +1045,11 @@ export default function RentalsPage() {
               )}
               <div className="flex gap-3 justify-end">
                 <button onClick={() => setReturnModal(false)} className="btn-secondary">Odustani</button>
-                <button onClick={saveReturn} disabled={returning} className="btn-primary">
+                <button
+                  onClick={saveReturn}
+                  disabled={returning || returnKm <= 0 || returnKm < (returnRental.pickup_km ?? 0)}
+                  className="btn-primary"
+                >
                   {returning ? "Zatvaranje..." : "Zatvori najam"}
                 </button>
               </div>
