@@ -1,16 +1,28 @@
 export interface FlightData {
   number: string;
   status: string;
-  airline?: { name: string };
+  airline?: { name: string; iata?: string; icao?: string };
+  aircraft?: { reg?: string; model?: string };
   departure?: {
-    airport?: { iata?: string; name?: string };
+    airport?: { iata?: string; icao?: string; name?: string };
     scheduledTime?: { local?: string; utc?: string };
     actualTime?: { local?: string; utc?: string };
+    revisedTime?: { local?: string; utc?: string };
+    runwayTime?: { local?: string; utc?: string };
+    terminal?: string;
+    gate?: string;
+    delay?: number;
   };
   arrival?: {
-    airport?: { iata?: string; name?: string };
+    airport?: { iata?: string; icao?: string; name?: string };
     scheduledTime?: { local?: string; utc?: string };
     actualTime?: { local?: string; utc?: string };
+    revisedTime?: { local?: string; utc?: string };
+    predictedTime?: { local?: string; utc?: string };
+    runwayTime?: { local?: string; utc?: string };
+    terminal?: string;
+    gate?: string;
+    baggageBelt?: string;
     delay?: number;
   };
 }
