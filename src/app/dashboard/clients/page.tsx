@@ -3,6 +3,13 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import clsx from "clsx";
+import {
+  isFilled,
+  isValidEmail,
+  REQUIRED,
+  INVALID_EMAIL,
+  type ValidationErrors,
+} from "@/lib/validation";
 
 interface Client {
   id: string;
@@ -29,6 +36,7 @@ export default function ClientsPage() {
   const [saving, setSaving]             = useState(false);
   const [search, setSearch]             = useState("");
   const [filterBlacklist, setFilterBlacklist] = useState(false);
+  const [errors, setErrors]             = useState<ValidationErrors>({});
   const supabase = createClient();
 
   const load = async () => {
@@ -39,10 +47,22 @@ export default function ClientsPage() {
   };
   useEffect(() => { load(); }, []);
 
-  const openAdd  = () => { setEditingClient({ ...emptyClient }); setIsEditing(false); setShowModal(true); };
-  const openEdit = (c: Client) => { setEditingClient({ ...c }); setIsEditing(true); setShowModal(true); };
+  const openAdd  = () => { setEditingClient({ ...emptyClient }); setIsEditing(false); setErrors({}); setShowModal(true); };
+  const openEdit = (c: Client) => { setEditingClient({ ...c }); setIsEditing(true); setErrors({}); setShowModal(true); };
+
+  const validateClient = (c: Partial<Client>): ValidationErrors => {
+    const e: ValidationErrors = {};
+    if (!isFilled(c.full_name)) e.full_name = REQUIRED;
+    if (c.client_type === "company" && !isFilled(c.company_name)) e.company_name = REQUIRED;
+    if (c.email && !isValidEmail(c.email)) e.email = INVALID_EMAIL;
+    if (c.is_blacklisted && !isFilled(c.blacklist_reason)) e.blacklist_reason = REQUIRED;
+    return e;
+  };
 
   const save = async () => {
+    const errs = validateClient(editingClient);
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
     setSaving(true);
     if (isEditing && editingClient.id) {
       await supabase.from("clients").update(editingClient).eq("id", editingClient.id);
@@ -60,8 +80,12 @@ export default function ClientsPage() {
     return matchSearch && matchBlacklist;
   });
 
-  const set = (key: keyof Client, value: any) =>
+  const set = (key: keyof Client, value: any) => {
     setEditingClient((prev) => ({ ...prev, [key]: value }));
+    if (errors[key as string]) {
+      setErrors((prev) => { const n = { ...prev }; delete n[key as string]; return n; });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F7F9FC]">
@@ -204,13 +228,25 @@ export default function ClientsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="label">Ime i prezime</label>
-                  <input className="input" value={editingClient.full_name ?? ""} onChange={(e) => set("full_name", e.target.value)} placeholder="Ime Prezime" />
+                  <label className="label">Ime i prezime <span className="text-red-400">*</span></label>
+                  <input
+                    className={clsx("input", errors.full_name && "border-red-300 focus:ring-red-200 focus:border-red-400")}
+                    value={editingClient.full_name ?? ""}
+                    onChange={(e) => set("full_name", e.target.value)}
+                    placeholder="Ime Prezime"
+                  />
+                  {errors.full_name && <p className="text-[11px] text-red-500 mt-1 font-medium">{errors.full_name}</p>}
                 </div>
                 {editingClient.client_type === "company" && (
                   <div className="col-span-2">
-                    <label className="label">Naziv kompanije</label>
-                    <input className="input" value={editingClient.company_name ?? ""} onChange={(e) => set("company_name", e.target.value)} placeholder="d.o.o." />
+                    <label className="label">Naziv kompanije <span className="text-red-400">*</span></label>
+                    <input
+                      className={clsx("input", errors.company_name && "border-red-300 focus:ring-red-200 focus:border-red-400")}
+                      value={editingClient.company_name ?? ""}
+                      onChange={(e) => set("company_name", e.target.value)}
+                      placeholder="d.o.o."
+                    />
+                    {errors.company_name && <p className="text-[11px] text-red-500 mt-1 font-medium">{errors.company_name}</p>}
                   </div>
                 )}
                 <div>
@@ -223,7 +259,13 @@ export default function ClientsPage() {
                 </div>
                 <div>
                   <label className="label">Email</label>
-                  <input type="email" className="input" value={editingClient.email ?? ""} onChange={(e) => set("email", e.target.value)} />
+                  <input
+                    type="email"
+                    className={clsx("input", errors.email && "border-red-300 focus:ring-red-200 focus:border-red-400")}
+                    value={editingClient.email ?? ""}
+                    onChange={(e) => set("email", e.target.value)}
+                  />
+                  {errors.email && <p className="text-[11px] text-red-500 mt-1 font-medium">{errors.email}</p>}
                 </div>
                 <div>
                   <label className="label">Grad</label>
@@ -244,8 +286,14 @@ export default function ClientsPage() {
                 </label>
                 {editingClient.is_blacklisted && (
                   <div className="mt-3">
-                    <label className="label">Razlog</label>
-                    <input className="input" value={editingClient.blacklist_reason ?? ""} onChange={(e) => set("blacklist_reason", e.target.value)} placeholder="Razlog za zabranu..." />
+                    <label className="label">Razlog <span className="text-red-400">*</span></label>
+                    <input
+                      className={clsx("input", errors.blacklist_reason && "border-red-300 focus:ring-red-200 focus:border-red-400")}
+                      value={editingClient.blacklist_reason ?? ""}
+                      onChange={(e) => set("blacklist_reason", e.target.value)}
+                      placeholder="Razlog za zabranu..."
+                    />
+                    {errors.blacklist_reason && <p className="text-[11px] text-red-500 mt-1 font-medium">{errors.blacklist_reason}</p>}
                   </div>
                 )}
               </div>

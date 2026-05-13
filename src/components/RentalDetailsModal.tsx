@@ -49,6 +49,18 @@ function Row({ label, value, mono }: { label: string; value: React.ReactNode; mo
   );
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  active: "Aktivan",
+  completed: "Završen",
+  cancelled: "Otkazan",
+};
+
+const STATUS_STYLE: Record<string, string> = {
+  active: "bg-blue-100 text-blue-700 border-blue-200",
+  completed: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  cancelled: "bg-slate-100 text-slate-500 border-slate-200",
+};
+
 export default function RentalDetailsModal({ rental, onClose, onCloseRental }: Props) {
   const pickupCount = rental.damage_report_out?.pins?.length ?? 0;
   const returnCount = rental.damage_report_in?.pins?.length ?? 0;
@@ -61,8 +73,13 @@ export default function RentalDetailsModal({ rental, onClose, onCloseRental }: P
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#E7E7E7] flex-shrink-0">
           <div>
-            <h2 className="text-lg font-bold text-slate-800">Detalji najma</h2>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="text-lg font-bold text-slate-800">Detalji najma</h2>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border ${STATUS_STYLE[rental.status] ?? "bg-slate-100 text-slate-500 border-slate-200"}`}>
+                {STATUS_LABEL[rental.status] ?? rental.status}
+              </span>
+            </div>
+            <p className="text-sm text-slate-500">
               {rental.vehicles?.make} {rental.vehicles?.model}
               <span className="ml-2 text-[#003580] font-mono text-xs font-semibold">
                 {rental.vehicles?.registration}
@@ -115,9 +132,9 @@ export default function RentalDetailsModal({ rental, onClose, onCloseRental }: P
                 label="Dnevna tarifa"
                 value={
                   <>
-                    {rental.daily_rate} KM
+                    {(rental.daily_rate * 1.9583).toFixed(2)} KM
                     <span className="text-slate-400 font-normal text-xs ml-1.5">
-                      ≈ €{(rental.daily_rate / 1.9583).toFixed(2)}
+                      ≈ €{rental.daily_rate}
                     </span>
                   </>
                 }
@@ -126,14 +143,14 @@ export default function RentalDetailsModal({ rental, onClose, onCloseRental }: P
                 label="Ukupno"
                 value={
                   <>
-                    {(rental.total_amount ?? 0).toFixed(2)} KM
+                    {((rental.total_amount ?? 0) * 1.9583).toFixed(2)} KM
                     <span className="text-slate-400 font-normal text-xs ml-1.5">
-                      ≈ €{((rental.total_amount ?? 0) / 1.9583).toFixed(2)}
+                      ≈ €{(rental.total_amount ?? 0).toFixed(2)}
                     </span>
                   </>
                 }
               />
-              <Row label="Depozit" value={`${rental.deposit_amount ?? 0} KM`} />
+              <Row label="Depozit" value={`${((rental.deposit_amount ?? 0) * 1.9583).toFixed(2)} KM`} />
             </div>
           </div>
 
@@ -204,9 +221,15 @@ export default function RentalDetailsModal({ rental, onClose, onCloseRental }: P
           </div>
 
           {/* Oštećenja */}
-          {(pickupCount > 0 || returnCount > 0) && (
-            <div>
-              <SectionLabel>Oštećenja</SectionLabel>
+          <div>
+            <SectionLabel>Oštećenja</SectionLabel>
+            {pickupCount === 0 && returnCount === 0 ? (
+              <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                {rental.status === "completed"
+                  ? "Vozilo vraćeno bez evidentiranih oštećenja"
+                  : "Nema evidentiranih oštećenja"}
+              </div>
+            ) : (
               <div className="flex flex-wrap gap-2">
                 {pickupCount > 0 && (
                   <span className="text-xs bg-orange-50 text-orange-700 border border-orange-200 px-2.5 py-1 rounded-full font-medium">
@@ -215,29 +238,36 @@ export default function RentalDetailsModal({ rental, onClose, onCloseRental }: P
                 )}
                 {returnCount > 0 && (
                   <span className="text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-1 rounded-full font-medium">
-                    ↓ {returnCount} pri vraćanju
+                    ↓ {returnCount} nova oštećenja pri vraćanju
+                  </span>
+                )}
+                {rental.status === "completed" && returnCount === 0 && pickupCount > 0 && (
+                  <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full font-medium">
+                    ✓ Bez novih oštećenja pri vraćanju
                   </span>
                 )}
               </div>
+            )}
+          </div>
+
+          {/* Lokacija (GPS placeholder — wired in Commit 3) — only for active rentals */}
+          {isActive && (
+            <div>
+              <SectionLabel>Lokacija (GPS)</SectionLabel>
+              <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center text-center">
+                <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center mb-2.5">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2a8 8 0 00-8 8c0 5.5 8 12 8 12s8-6.5 8-12a8 8 0 00-8-8z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                </div>
+                <p className="text-sm font-semibold text-slate-600">GPS karta uskoro</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  Traccar integracija stiže u sljedećem koraku
+                </p>
+              </div>
             </div>
           )}
-
-          {/* Lokacija (GPS placeholder — wired in Commit 3) */}
-          <div>
-            <SectionLabel>Lokacija (GPS)</SectionLabel>
-            <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center text-center">
-              <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center mb-2.5">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2a8 8 0 00-8 8c0 5.5 8 12 8 12s8-6.5 8-12a8 8 0 00-8-8z"/>
-                  <circle cx="12" cy="10" r="3"/>
-                </svg>
-              </div>
-              <p className="text-sm font-semibold text-slate-600">GPS karta uskoro</p>
-              <p className="text-xs text-slate-400 mt-1">
-                Traccar integracija stiže u sljedećem koraku
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}

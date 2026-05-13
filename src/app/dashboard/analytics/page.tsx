@@ -60,8 +60,8 @@ function prevPeriodRange(p: Period): { from: string; to: string } | null {
   return null;
 }
 
-const fmt = (n: number) => `${Math.round(n).toLocaleString("de-DE")} KM`;
-const fmtFull = (n: number) => `${n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KM`;
+const fmt = (n: number) => `${Math.round(n * 1.9583).toLocaleString("hr-HR")} KM`;
+const fmtFull = (n: number) => `${(n * 1.9583).toLocaleString("hr-HR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KM`;
 const pct = (n: number) => `${n.toFixed(1)}%`;
 
 // ── Sparkline ──────────────────────────────────────────────────
@@ -448,8 +448,8 @@ export default function AnalyticsPage() {
             <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5">
               <div className="flex items-start sm:items-center justify-between gap-3 mb-5">
                 <div>
-                  <h2 className="text-base font-semibold text-slate-800">Miesečni prihod {new Date().getFullYear()}</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Prihod po miesecu — uključite toggle za usporedbu s troškovima</p>
+                  <h2 className="text-base font-semibold text-slate-800">Mjesečni prihod {new Date().getFullYear()}</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Prihod po mjesecu — uključite toggle za usporedbu s troškovima</p>
                 </div>
                 <div className="flex items-center gap-2.5 flex-shrink-0">
                   <span className="text-xs text-slate-500 whitespace-nowrap">Prikaži troškove:</span>
@@ -472,7 +472,7 @@ export default function AnalyticsPage() {
                   <BarChart data={yearlyMonthlyData} barGap={3} barCategoryGap={showCosts ? "25%" : "35%"}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f4f8" vertical={false} />
                     <XAxis dataKey="label" tick={{ fontSize: 12, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(0)}k KM` : `${v} KM`} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} tickFormatter={v => { const km = v * 1.9583; return km >= 1000 ? `${(km / 1000).toFixed(0)}k KM` : `${Math.round(km)} KM`; }} axisLine={false} tickLine={false} />
                     <Tooltip
                       formatter={(v: number, name: string) => [fmtFull(v), name === "revenue" ? "Prihod" : "Troškovi"]}
                       contentStyle={{ borderRadius: 8, border: "1px solid #E7E7E7", fontSize: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
@@ -597,9 +597,9 @@ export default function AnalyticsPage() {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={costPerKmData} layout="vertical" margin={{ left: 10, right: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E7E7E7" />
-                      <XAxis type="number" tick={{ fontSize: 11, fill: "#64748b" }} tickFormatter={v => `${v.toFixed(2)} KM`} />
+                      <XAxis type="number" tick={{ fontSize: 11, fill: "#64748b" }} tickFormatter={v => `${(v * 1.9583).toFixed(2)} KM`} />
                       <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#475569" }} width={80} />
-                      <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #E7E7E7", fontSize: 12 }} formatter={(v: number) => [`${v.toFixed(3)} KM/km`, "Trošak"]} />
+                      <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #E7E7E7", fontSize: 12 }} formatter={(v: number) => [`${(v * 1.9583).toFixed(3)} KM/km`, "Trošak"]} />
                       <Bar dataKey="value" radius={[0, 4, 4, 0]} fill="#003580" />
                     </BarChart>
                   </ResponsiveContainer>

@@ -217,7 +217,7 @@ export default function LeasingPage() {
             <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5 space-y-4">
               <SectionTitle>Finansiranje vozila</SectionTitle>
               <div className="grid grid-cols-2 gap-4">
-                <InputField label="Cijena auta" prefix="KM" value={inputs.vehiclePrice} onChange={set("vehiclePrice")} />
+                <InputField label="Cijena auta" prefix="€" value={inputs.vehiclePrice} onChange={set("vehiclePrice")} />
                 <InputField label="Učešće" sublabel="(%) npr. 0.15 = 15%" value={inputs.downPaymentPct} onChange={set("downPaymentPct")} step="0.01" min={0} />
                 <InputField label="Kamata godišnja" sublabel="(%) npr. 0.07 = 7%" value={inputs.annualInterestRate} onChange={set("annualInterestRate")} step="0.001" min={0} />
                 <InputField label="Period" suffix="mj" value={inputs.periodMonths} onChange={set("periodMonths")} min={1} />
@@ -240,12 +240,12 @@ export default function LeasingPage() {
             <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5 space-y-4">
               <SectionTitle>Troškovi (cijeli period najma)</SectionTitle>
               <div className="grid grid-cols-2 gap-4">
-                <InputField label="Kasko (godišnje)" prefix="KM" value={inputs.kaskoYearly} onChange={set("kaskoYearly")} />
-                <InputField label="AO Kasko (godišnje)" prefix="KM" value={inputs.aoYearly} onChange={set("aoYearly")} />
-                <InputField label="Gume (ukupno)" prefix="KM" value={inputs.tyresTotal} onChange={set("tyresTotal")} />
-                <InputField label="Servis (ukupno)" prefix="KM" value={inputs.serviceTotal} onChange={set("serviceTotal")} />
+                <InputField label="Kasko (godišnje)" prefix="€" value={inputs.kaskoYearly} onChange={set("kaskoYearly")} />
+                <InputField label="AO Kasko (godišnje)" prefix="€" value={inputs.aoYearly} onChange={set("aoYearly")} />
+                <InputField label="Gume (ukupno)" prefix="€" value={inputs.tyresTotal} onChange={set("tyresTotal")} />
+                <InputField label="Servis (ukupno)" prefix="€" value={inputs.serviceTotal} onChange={set("serviceTotal")} />
                 <div className="col-span-2">
-                  <InputField label="Administracija i neplanirano" prefix="KM" value={inputs.adminTotal} onChange={set("adminTotal")} />
+                  <InputField label="Administracija i neplanirano" prefix="€" value={inputs.adminTotal} onChange={set("adminTotal")} />
                 </div>
               </div>
             </div>
@@ -257,7 +257,7 @@ export default function LeasingPage() {
                 <InputField label="Marža posto" sublabel="(%) npr. 0.17 = 17%" value={inputs.marginPct} onChange={set("marginPct")} step="0.01" min={0} />
                 <InputField label="PDV" sublabel="(%) npr. 0.17 = 17%" value={inputs.vatPct} onChange={set("vatPct")} step="0.01" min={0} />
                 <div className="col-span-2">
-                  <InputField label="Vrijednost vozila nakon isteka najma" prefix="KM" value={inputs.residualValue} onChange={set("residualValue")} />
+                  <InputField label="Vrijednost vozila nakon isteka najma" prefix="€" value={inputs.residualValue} onChange={set("residualValue")} />
                 </div>
               </div>
             </div>
@@ -283,7 +283,7 @@ export default function LeasingPage() {
             <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5 space-y-1">
               <SectionTitle>Ukupni troškovi</SectionTitle>
               <ResultRow label="Ukupan trošak" value={formatCurrency(results.totalCost)} highlight />
-              <ResultRow label="Miesečni trošak" value={formatCurrency(results.monthlyCost)} />
+              <ResultRow label="Mjesečni trošak" value={formatCurrency(results.monthlyCost)} />
               <ResultRow label={`Marža iznos (${formatPct(inputs.marginPct)})`} value={formatCurrency(results.marginAmount)} />
             </div>
 
@@ -292,7 +292,7 @@ export default function LeasingPage() {
               <SectionTitle>Ponuda klijentu</SectionTitle>
               <ResultRow label="Najamnina (bez PDV)" value={formatCurrency(results.monthlyRentNoVat)} highlight />
               <ResultRow
-                label={`Miesečni najam s PDV (${formatPct(inputs.vatPct)})`}
+                label={`Mjesečni najam s PDV (${formatPct(inputs.vatPct)})`}
                 value={formatCurrency(results.monthlyRentWithVat)}
                 accent
               />

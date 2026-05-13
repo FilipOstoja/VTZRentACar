@@ -209,23 +209,27 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
-                Ukupan iznos (KM) *
+                Ukupan iznos (€) *
               </label>
               <input
                 type="number"
                 step="0.01"
                 min="0"
+                placeholder="npr. 100.00"
                 value={form.total_amount || ""}
                 onChange={(e) => setForm({ ...form, total_amount: parseFloat(e.target.value) || 0 })}
                 className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]"
               />
+              {form.total_amount > 0 && (
+                <p className="text-[11px] text-slate-400 mt-1">≈ {(form.total_amount * 1.9583).toFixed(2)} KM</p>
+              )}
             </div>
             <div>
               <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
                 Po vozilu
               </label>
               <div className="w-full bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-[#003580] text-sm font-bold">
-                {perVehicle.toFixed(2)} KM
+                {(perVehicle * 1.9583).toFixed(2)} KM
               </div>
             </div>
           </div>
@@ -246,7 +250,7 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
           {/* Monthly split */}
           <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Raspodijeli po miesecima</span>
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Raspodijeli po mjesecima</span>
               <button
                 type="button"
                 onClick={() => setSplitMonths(v => v <= 1 ? 2 : 1)}
@@ -258,17 +262,25 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
             {splitMonths > 1 && (
               <div className="flex items-center gap-3 mt-2">
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-slate-500">Broj mieseci:</label>
+                  <label className="text-xs text-slate-500">Broj mjeseci:</label>
                   <input
                     type="number" min="2" max="60"
-                    value={splitMonths}
-                    onChange={e => setSplitMonths(Math.max(2, parseInt(e.target.value) || 2))}
+                    value={splitMonths || ""}
+                    onChange={e => {
+                      const raw = e.target.value;
+                      if (raw === "") { setSplitMonths(0); return; }
+                      const n = parseInt(raw, 10);
+                      setSplitMonths(isNaN(n) ? 0 : n);
+                    }}
+                    onBlur={() => { if (splitMonths < 2) setSplitMonths(2); }}
                     className="w-16 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#003580]/20"
                   />
                 </div>
-                <div className="text-xs text-slate-500">
-                  = <span className="font-semibold text-[#003580]">{vehicleCount > 0 ? (form.total_amount / vehicleCount / splitMonths).toFixed(2) : "0.00"} KM</span> / vozilo / miesec
-                </div>
+                {splitMonths >= 2 && (
+                  <div className="text-xs text-slate-500">
+                    = <span className="font-semibold text-[#003580]">{vehicleCount > 0 ? (form.total_amount / vehicleCount / splitMonths * 1.9583).toFixed(2) : "0.00"} KM</span> / vozilo / mjesec
+                  </div>
+                )}
               </div>
             )}
           </div>

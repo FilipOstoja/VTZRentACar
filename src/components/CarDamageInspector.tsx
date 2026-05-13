@@ -396,22 +396,43 @@ export function CarDamageInspector({
   onChange,
   vehicleMake,
   vehicleModel,
+  vehicleModel3d,
   preExistingDamages = [],
 }: {
   damages: DamagePin[];
   onChange: (pins: DamagePin[]) => void;
   vehicleMake?: string;
   vehicleModel?: string;
+  vehicleModel3d?: string | null;
   preExistingDamages?: DamagePin[];
 }) {
-  // Resolve the correct 3D model path from the vehicle make/model
+  // Resolve the 3D model path: prefer explicit model_3d, fall back to substring match on make/model
   const modelPath = (() => {
+    if (vehicleModel3d) return `/models/${vehicleModel3d}/scene.gltf`;
     const m = vehicleModel?.toLowerCase() ?? "";
     if (m.includes("crafter"))        return "/models/crafter/scene.gltf";
     if (m.includes("passat estate"))  return "/models/passat_estate/scene.gltf";
     if (m.includes("passat"))         return "/models/passat_sedan/scene.gltf";
-    return "/models/golf_8/scene.gltf";
+    return null;
   })();
+
+  // No 3D model available — render a friendly placeholder so the workflow still works
+  if (!modelPath) {
+    return (
+      <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl p-8 flex flex-col items-center justify-center text-center min-h-[300px]">
+        <div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center mb-3">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 17H3a2 2 0 01-2-2V9a2 2 0 012-2h16a2 2 0 012 2v6a2 2 0 01-2 2h-2"/>
+            <rect x="7" y="14" width="10" height="5" rx="2"/>
+          </svg>
+        </div>
+        <p className="text-sm font-semibold text-slate-700">3D model nije dodijeljen za ovo vozilo</p>
+        <p className="text-xs text-slate-500 mt-1.5 max-w-sm">
+          Dodajte 3D model u "Uredi vozilo" da omogućite vizualnu inspekciju oštećenja.
+        </p>
+      </div>
+    );
+  }
 
   const [viewIdx, setViewIdx] = useState(0);
   const [tiltDir, setTiltDir] = useState<"left" | "right" | null>(null);

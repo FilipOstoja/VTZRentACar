@@ -7,6 +7,26 @@ import clsx from "clsx";
 import QuickAddRow from "@/components/expenses/QuickAddRow";
 import GlobalExpenseModal from "@/components/expenses/GlobalExpenseModal";
 import { getVehiclePhoto } from "@/lib/vehiclePhoto";
+import {
+  isFilled,
+  isValidYear,
+  isPositiveNumber,
+  isNonNegativeNumber,
+  isValidRegistration,
+  REQUIRED,
+  INVALID_YEAR,
+  MUST_BE_POSITIVE,
+  MUST_BE_NON_NEGATIVE,
+  REGISTRATION_TOO_SHORT,
+  type ValidationErrors,
+} from "@/lib/validation";
+
+const MODEL_3D_OPTIONS: { key: string; label: string; sublabel: string }[] = [
+  { key: "golf_8",        label: "Golf 8",        sublabel: "Hatchback" },
+  { key: "passat_sedan",  label: "Passat Sedan",  sublabel: "Limuzina" },
+  { key: "passat_estate", label: "Passat Estate", sublabel: "Karavan" },
+  { key: "crafter",       label: "Crafter",       sublabel: "Kombi" },
+];
 
 const STATUS_LABELS: Record<string, string> = {
   free: "Slobodno",
@@ -46,6 +66,7 @@ interface Vehicle {
   registration_expiry?: string;
   current_km?: number;
   notes?: string;
+  model_3d?: string | null;
 }
 
 const emptyVehicle: Partial<Vehicle> = {
@@ -56,25 +77,34 @@ const emptyVehicle: Partial<Vehicle> = {
   status: "free",
   daily_rate: 0,
   current_km: 0,
+  model_3d: null,
 };
 
 const FieldInput = ({
-  label, type, placeholder, value, onChange,
+  label, type, placeholder, value, onChange, required, error,
 }: {
   label: string; type: string; placeholder: string;
   value: string | number; onChange: (val: string | number) => void;
+  required?: boolean; error?: string;
 }) => (
   <div>
     <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
       {label}
+      {required && <span className="text-red-400 ml-1">*</span>}
     </label>
     <input
       type={type}
-      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580] transition-all"
+      className={clsx(
+        "w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all",
+        error
+          ? "border-red-300 focus:ring-red-200 focus:border-red-400"
+          : "border-slate-200 focus:ring-[#003580]/20 focus:border-[#003580]"
+      )}
       placeholder={placeholder}
       value={value ?? ""}
       onChange={(e) => onChange(type === "number" ? (e.target.value === "" ? 0 : parseFloat(e.target.value) || 0) : e.target.value)}
     />
+    {error && <p className="text-[11px] text-red-500 mt-1 font-medium">{error}</p>}
   </div>
 );
 
@@ -101,6 +131,7 @@ export default function FleetPage() {
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [timelineOffset, setTimelineOffset] = useState(0);
   const [showGlobalExpense, setShowGlobalExpense] = useState(false);
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const supabase = createClient();
 
   const today = useMemo(() => {
@@ -141,18 +172,36 @@ export default function FleetPage() {
       .then(({ data: r }) => setTimelineRentals(r || []));
   }, [timelineStart]);
 
-  const openAdd = () => { setEditingVehicle({ ...emptyVehicle }); setIsEditing(false); setShowModal(true); };
+  const openAdd = () => { setEditingVehicle({ ...emptyVehicle }); setIsEditing(false); setErrors({}); setShowModal(true); };
+
+  const validateVehicle = (v: Partial<Vehicle>): ValidationErrors => {
+    const e: ValidationErrors = {};
+    if (!isFilled(v.make)) e.make = REQUIRED;
+    if (!isFilled(v.model)) e.model = REQUIRED;
+    if (!isValidYear(v.year)) e.year = INVALID_YEAR;
+    if (!isFilled(v.registration)) e.registration = REQUIRED;
+    else if (!isValidRegistration(String(v.registration))) e.registration = REGISTRATION_TOO_SHORT;
+    if (!isPositiveNumber(v.daily_rate)) e.daily_rate = MUST_BE_POSITIVE;
+    if (!isNonNegativeNumber(v.current_km)) e.current_km = MUST_BE_NON_NEGATIVE;
+    if (v.purchase_price != null && !isNonNegativeNumber(v.purchase_price)) e.purchase_price = MUST_BE_NON_NEGATIVE;
+    return e;
+  };
 
   const save = async () => {
+    const errs = validateVehicle(editingVehicle);
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
     setSaving(true);
     const clean = {
       ...editingVehicle,
-      daily_rate: isFinite(Number(editingVehicle.daily_rate)) ? Number(editingVehicle.daily_rate) : 0,
-      current_km: isFinite(Number(editingVehicle.current_km)) ? Number(editingVehicle.current_km) : 0,
-      year: isFinite(Number(editingVehicle.year)) ? Number(editingVehicle.year) : new Date().getFullYear(),
-      purchase_price: editingVehicle.purchase_price != null
-        ? (isFinite(Number(editingVehicle.purchase_price)) ? Number(editingVehicle.purchase_price) : null)
+      daily_rate: Number(editingVehicle.daily_rate),
+      current_km: Number(editingVehicle.current_km ?? 0),
+      year: Number(editingVehicle.year),
+      purchase_price: editingVehicle.purchase_price != null && editingVehicle.purchase_price !== 0
+        ? Number(editingVehicle.purchase_price)
         : null,
+      model_3d: editingVehicle.model_3d ?? null,
     };
     if (isEditing && clean.id) {
       await supabase.from("vehicles").update(clean).eq("id", clean.id);
@@ -188,8 +237,10 @@ export default function FleetPage() {
     return matchFilter && matchSearch;
   });
 
-  const setField = (key: string, val: string | number) =>
+  const setField = (key: string, val: string | number) => {
     setEditingVehicle((prev) => ({ ...prev, [key]: val }));
+    if (errors[key]) setErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
+  };
 
   const updateStatus = async (vehicleId: string, newStatus: string) => {
     setUpdatingStatus(vehicleId);
@@ -485,7 +536,7 @@ export default function FleetPage() {
                         <td className="px-4 py-3 text-sm text-slate-500">{v.year}</td>
                         <td className="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">{v.current_km?.toLocaleString()} km</td>
                         <td className="px-4 py-3 text-sm font-semibold text-slate-700 whitespace-nowrap">
-                          {v.daily_rate} <span className="font-normal text-slate-400">KM/d</span>
+                          {(Number(v.daily_rate) * 1.9583).toFixed(2)} <span className="font-normal text-slate-400">KM/d</span>
                         </td>
                         <td className="px-4 py-3 text-xs whitespace-nowrap">
                           {v.registration_expiry ? (
@@ -637,22 +688,24 @@ export default function FleetPage() {
 
             <div className="grid grid-cols-2 gap-4">
               {[
-                { label: "Marka", key: "make", type: "text", placeholder: "npr. Volkswagen" },
-                { label: "Model", key: "model", type: "text", placeholder: "npr. Golf" },
-                { label: "Godište", key: "year", type: "number", placeholder: "2022" },
-                { label: "Registracija", key: "registration", type: "text", placeholder: "A12-K-345" },
-                { label: "Broj šasije", key: "chassis_number", type: "text", placeholder: "VIN..." },
-                { label: "Boja", key: "color", type: "text", placeholder: "Bijela" },
-                { label: "Dnevna tarifa (KM)", key: "daily_rate", type: "number", placeholder: "50" },
-                { label: "Trenutna km", key: "current_km", type: "number", placeholder: "0" },
-                { label: "Nabavna cijena (KM)", key: "purchase_price", type: "number", placeholder: "25000" },
-                { label: "Registracija ističe", key: "registration_expiry", type: "date", placeholder: "" },
+                { label: "Marka",                key: "make",              type: "text",   placeholder: "npr. Volkswagen", required: true },
+                { label: "Model",                key: "model",             type: "text",   placeholder: "npr. Golf",       required: true },
+                { label: "Godište",              key: "year",              type: "number", placeholder: "2022",            required: true },
+                { label: "Registracija",         key: "registration",      type: "text",   placeholder: "A12-K-345",       required: true },
+                { label: "Broj šasije",          key: "chassis_number",    type: "text",   placeholder: "VIN..." },
+                { label: "Boja",                 key: "color",             type: "text",   placeholder: "Bijela" },
+                { label: "Dnevna tarifa (€)",    key: "daily_rate",        type: "number", placeholder: "50",              required: true },
+                { label: "Trenutna km",          key: "current_km",        type: "number", placeholder: "0" },
+                { label: "Nabavna cijena (€)",   key: "purchase_price",    type: "number", placeholder: "15000" },
+                { label: "Registracija ističe",  key: "registration_expiry", type: "date", placeholder: "" },
               ].map((f) => (
                 <FieldInput
                   key={f.key}
                   label={f.label}
                   type={f.type}
                   placeholder={f.placeholder}
+                  required={f.required}
+                  error={errors[f.key]}
                   value={(editingVehicle as any)[f.key] ?? ""}
                   onChange={(val) => setField(f.key, val)}
                 />
@@ -671,6 +724,68 @@ export default function FleetPage() {
                     <option key={k} value={k}>{v}</option>
                   ))}
                 </select>
+              </div>
+            </div>
+
+            {/* 3D model selector */}
+            <div className="mt-5">
+              <label className="block text-[11px] font-semibold text-slate-500 mb-2 uppercase tracking-wide">
+                3D model za inspekciju oštećenja
+              </label>
+              <p className="text-[11px] text-slate-400 mb-3">
+                Koristi se za 3D inspektor pri preuzimanju i povratku vozila. Možete preskočiti i dodati kasnije.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingVehicle((p) => ({ ...p, model_3d: null }))}
+                  className={clsx(
+                    "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all active:scale-95",
+                    !editingVehicle.model_3d
+                      ? "border-slate-400 bg-slate-50 ring-2 ring-slate-200"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  )}
+                >
+                  <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs font-bold text-slate-700">Bez 3D modela</div>
+                    <div className="text-[10px] text-slate-400">Dodaj kasnije</div>
+                  </div>
+                </button>
+                {MODEL_3D_OPTIONS.map((m) => (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => setEditingVehicle((p) => ({ ...p, model_3d: m.key }))}
+                    className={clsx(
+                      "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all active:scale-95",
+                      editingVehicle.model_3d === m.key
+                        ? "border-[#003580]/60 bg-[#003580]/5 ring-2 ring-[#003580]/20"
+                        : "border-slate-200 bg-white hover:border-[#003580]/30"
+                    )}
+                  >
+                    <div className={clsx(
+                      "w-9 h-9 rounded-full flex items-center justify-center",
+                      editingVehicle.model_3d === m.key ? "bg-[#003580]" : "bg-slate-100"
+                    )}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke={editingVehicle.model_3d === m.key ? "white" : "#64748b"}
+                        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 17H3a2 2 0 01-2-2V9a2 2 0 012-2h16a2 2 0 012 2v6a2 2 0 01-2 2h-2"/>
+                        <rect x="7" y="14" width="10" height="5" rx="2"/>
+                      </svg>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs font-bold text-slate-800">{m.label}</div>
+                      <div className="text-[10px] text-slate-400">{m.sublabel}</div>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
 

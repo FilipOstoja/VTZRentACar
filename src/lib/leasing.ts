@@ -110,7 +110,7 @@ export function calculateLeasing(inputs: LeasingInputs): LeasingResults {
 }
 
 export function formatCurrency(value: number, _currency = "KM"): string {
-  return `${new Intl.NumberFormat("hr-HR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} KM`;
+  return `${new Intl.NumberFormat("hr-HR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value * 1.9583)} KM`;
 }
 
 export function formatPct(value: number): string {

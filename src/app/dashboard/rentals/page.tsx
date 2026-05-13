@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { CarDamageInspector, DamagePin } from "@/components/CarDamageInspector";
 import ContractPreviewModal from "@/components/ContractPreviewModal";
@@ -25,12 +26,13 @@ interface Rental {
   flight_number?: string | null;
   damage_report_out?: { pins: DamagePin[] } | null;
   damage_report_in?: { pins: DamagePin[] } | null;
-  vehicles?: { make: string; model: string; registration: string; persistent_damage?: { pins: DamagePin[] } };
+  vehicles?: { make: string; model: string; registration: string; model_3d?: string | null; persistent_damage?: { pins: DamagePin[] } };
   clients?: { full_name: string; phone?: string; is_blacklisted: boolean };
 }
 interface Vehicle {
   id: string; make: string; model: string; registration: string;
   status: string; daily_rate: number; current_km?: number;
+  model_3d?: string | null;
   persistent_damage?: { pins: DamagePin[] };
 }
 interface Client {
@@ -150,15 +152,16 @@ export default function RentalsPage() {
   const [damages, setDamages] = useState<DamagePin[]>([]);
 
   const supabase = createClient();
+  const router = useRouter();
 
   const load = async () => {
     setLoading(true);
     const [{ data: r }, { data: v }, { data: c }] = await Promise.all([
       supabase.from("rentals")
-        .select("*, vehicles(make, model, registration, persistent_damage), clients(full_name, phone, is_blacklisted)")
+        .select("*, vehicles(make, model, registration, model_3d, persistent_damage), clients(full_name, phone, is_blacklisted)")
         .order("created_at", { ascending: false }).limit(50),
       supabase.from("vehicles")
-        .select("id, make, model, registration, status, daily_rate, current_km, persistent_damage")
+        .select("id, make, model, registration, status, daily_rate, current_km, model_3d, persistent_damage")
         .neq("status", "inactive"),
       supabase.from("clients")
         .select("id, full_name, phone, email, is_blacklisted").eq("is_blacklisted", false).order("full_name"),
@@ -259,6 +262,7 @@ export default function RentalsPage() {
     }).select().single();
     if (rental) await supabase.from("vehicles").update({ status: "rented" }).eq("id", form.vehicle_id);
     setSaving(false); setShowModal(false); load();
+    router.refresh();
     return { rental, clientId };
   };
 
@@ -327,6 +331,7 @@ export default function RentalsPage() {
     setSaving(false);
     setShowModal(false);
     load();
+    router.refresh();
     setContractPreview({ data: contractData, clientEmail });
   };
   const openReturnModal = (rental: Rental) => {
@@ -362,6 +367,7 @@ export default function RentalsPage() {
     }
 
     setReturning(false); setReturnModal(false); setReturnRental(null); setReturnDamages([]); setReturnKm(0); setSyncDamagesToVehicle(false); load();
+    router.refresh();
   };
 
   const activeCount = rentals.filter((r) => r.status === "active").length;
@@ -405,7 +411,14 @@ export default function RentalsPage() {
                   const returnCount = r.damage_report_in?.pins?.length  ?? 0;
                   const isOverdue   = r.status === "active" && r.end_date < new Date().toISOString().split("T")[0];
                   return (
-                    <tr key={r.id} className={clsx("hover:bg-slate-50 transition-colors", isOverdue && "bg-red-50/50")}>
+                    <tr
+                      key={r.id}
+                      onClick={() => setDetailsRental(r)}
+                      className={clsx(
+                        "hover:bg-slate-50 transition-colors cursor-pointer",
+                        isOverdue && "bg-red-50/50"
+                      )}
+                    >
                       <td className="table-cell">
                         <div className="font-semibold text-slate-800">{r.vehicles?.make} {r.vehicles?.model}</div>
                         <div className="text-xs font-mono text-[#003580] font-semibold">{r.vehicles?.registration}</div>
@@ -418,7 +431,7 @@ export default function RentalsPage() {
                       <td className={clsx("table-cell", isOverdue ? "text-red-600 font-semibold" : "text-slate-500")}>{r.end_date}</td>
                       <td className="table-cell text-slate-600">{r.total_days}d</td>
                       <td className="table-cell font-semibold text-slate-800">
-                        {r.total_amount != null && isFinite(r.total_amount) ? `${r.total_amount.toFixed(2)} KM` : <span className="text-slate-300">—</span>}
+                        {r.total_amount != null && isFinite(r.total_amount) ? `${(r.total_amount * 1.9583).toFixed(2)} KM` : <span className="text-slate-300">—</span>}
                       </td>
                       <td className="table-cell">
                         {pickupCount > 0 || returnCount > 0 ? (
@@ -442,22 +455,22 @@ export default function RentalsPage() {
                         </span>
                       </td>
                       <td className="table-cell">
-                        {r.status === "active" && (
-                          <div className="flex gap-1.5 justify-end">
+                        <div className="flex gap-1.5 justify-end">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDetailsRental(r); }}
+                            className="text-xs bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors font-semibold whitespace-nowrap"
+                          >
+                            Detalji
+                          </button>
+                          {r.status === "active" && (
                             <button
-                              onClick={() => setDetailsRental(r)}
-                              className="text-xs bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors font-semibold whitespace-nowrap"
-                            >
-                              Detalji
-                            </button>
-                            <button
-                              onClick={() => openReturnModal(r)}
+                              onClick={(e) => { e.stopPropagation(); openReturnModal(r); }}
                               className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg hover:bg-emerald-100 transition-colors font-semibold whitespace-nowrap"
                             >
                               Zatvori
                             </button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -704,7 +717,7 @@ export default function RentalsPage() {
                     <ModalSelect value={form.vehicle_id} onChange={(e) => handleVehicleSelect(e.target.value)} disabled={!form.start_date || !form.end_date}>
                       <option value="">{!form.end_date ? "Prvo odaberite datume..." : availableVehicles.length === 0 ? "Nema slobodnih vozila" : "Odaberi vozilo..."}</option>
                       {availableVehicles.map((v) => (
-                        <option key={v.id} value={v.id}>{v.make} {v.model} — {v.registration} ({v.daily_rate} KM/dan)</option>
+                        <option key={v.id} value={v.id}>{v.make} {v.model} — {v.registration} ({(Number(v.daily_rate) * 1.9583).toFixed(2)} KM/dan)</option>
                       ))}
                     </ModalSelect>
                   </div>
@@ -732,7 +745,7 @@ export default function RentalsPage() {
                       <ModalInput type="number" value={form.pickup_km} onChange={(e) => setForm((p) => ({ ...p, pickup_km: Number(e.target.value) }))} />
                     </div>
                     <div>
-                      <ModalLabel>Depozit (KM)</ModalLabel>
+                      <ModalLabel>Depozit (€)</ModalLabel>
                       <ModalInput type="number" value={form.deposit_amount} onChange={(e) => setForm((p) => ({ ...p, deposit_amount: Number(e.target.value) }))} />
                     </div>
                   </div>
@@ -746,15 +759,15 @@ export default function RentalsPage() {
                       <div className="flex justify-between text-sm">
                         <span className="text-slate-500">Dnevna tarifa:</span>
                         <div className="text-right">
-                          <span className="text-slate-800 font-semibold">{dailyRate} KM</span>
-                          <span className="text-slate-400 text-xs ml-1.5">≈ €{(dailyRate / 1.9583).toFixed(2)}</span>
+                          <span className="text-slate-800 font-semibold">{(dailyRate * 1.9583).toFixed(2)} KM</span>
+                          <span className="text-slate-400 text-xs ml-1.5">≈ €{dailyRate}</span>
                         </div>
                       </div>
                       <div className="flex justify-between text-sm font-bold border-t border-[#003580]/15 pt-2 mt-2">
                         <span className="text-slate-600">Ukupno:</span>
                         <div className="text-right">
-                          <span className="text-[#003580] text-lg">{totalAmount.toFixed(2)} KM</span>
-                          <div className="text-xs text-slate-400 font-normal">≈ €{(totalAmount / 1.9583).toFixed(2)}</div>
+                          <span className="text-[#003580] text-lg">{(totalAmount * 1.9583).toFixed(2)} KM</span>
+                          <div className="text-xs text-slate-400 font-normal">≈ €{totalAmount.toFixed(2)}</div>
                         </div>
                       </div>
                     </div>
@@ -885,6 +898,7 @@ export default function RentalsPage() {
                     onChange={setDamages}
                     vehicleMake={selectedVehicle?.make}
                     vehicleModel={selectedVehicle?.model}
+                    vehicleModel3d={selectedVehicle?.model_3d}
                     preExistingDamages={selectedVehicle?.persistent_damage?.pins ?? []}
                   />
                 </div>
@@ -1020,6 +1034,7 @@ export default function RentalsPage() {
                 onChange={setReturnDamages}
                 vehicleMake={returnRental.vehicles?.make}
                 vehicleModel={returnRental.vehicles?.model}
+                vehicleModel3d={returnRental.vehicles?.model_3d}
                 preExistingDamages={
                   returnRental.damage_report_out?.pins ??
                   returnRental.vehicles?.persistent_damage?.pins ??

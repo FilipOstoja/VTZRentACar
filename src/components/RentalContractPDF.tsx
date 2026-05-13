@@ -288,17 +288,17 @@ export function RentalContractPDF({ data }: { data: ContractData }) {
             <View style={{ flex: 1 }}>
               <View style={S.financialRow}>
                 <Text style={S.financialLabel}>Dnevna tarifa:</Text>
-                <Text style={S.financialValue}>{data.dailyRate.toFixed(2)} KM  (≈ €{(data.dailyRate / 1.9583).toFixed(2)})</Text>
+                <Text style={S.financialValue}>{(data.dailyRate * 1.9583).toFixed(2)} KM  (≈ €{data.dailyRate.toFixed(2)})</Text>
               </View>
               <View style={S.financialRow}>
                 <Text style={S.financialLabel}>Depozit:</Text>
-                <Text style={S.financialValue}>{data.depositAmount.toFixed(2)} KM</Text>
+                <Text style={S.financialValue}>{(data.depositAmount * 1.9583).toFixed(2)} KM</Text>
               </View>
             </View>
           </View>
           <View style={S.totalRow}>
             <Text style={S.totalLabel}>UKUPAN IZNOS NAJMA:</Text>
-            <Text style={S.totalValue}>{data.totalAmount.toFixed(2)} KM  (≈ €{(data.totalAmount / 1.9583).toFixed(2)})</Text>
+            <Text style={S.totalValue}>{(data.totalAmount * 1.9583).toFixed(2)} KM  (≈ €{data.totalAmount.toFixed(2)})</Text>
           </View>
         </View>
 

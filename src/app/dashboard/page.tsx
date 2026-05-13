@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import AirportArrivalsCard from "@/components/AirportArrivalsCard";
 import type { AirportRental } from "@/components/AirportArrivalsCard";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 // ── Stat card ──────────────────────────────────────────────
 function StatCard({
   label,
