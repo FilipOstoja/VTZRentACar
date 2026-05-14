@@ -31,17 +31,17 @@ alter table public.global_expenses enable row level security;
 
 do $$
 begin
+  execute 'drop policy if exists "Allow all for authenticated" on public.global_expenses';
   if not exists (
     select 1 from pg_policies
     where tablename = 'global_expenses'
-      and policyname = 'Allow all for authenticated'
+      and policyname = 'Staff can manage global expenses'
   ) then
-    execute 'create policy "Allow all for authenticated"
+    execute 'create policy "Staff can manage global expenses"
       on public.global_expenses
       for all
-      to authenticated
-      using (true)
-      with check (true)';
+      using (public.is_staff())
+      with check (public.is_staff())';
   end if;
 end $$;
 
@@ -62,6 +62,10 @@ on conflict (id) do nothing;
 
 do $$
 begin
+  execute 'drop policy if exists "auth_users_upload_receipts" on storage.objects';
+  execute 'drop policy if exists "auth_users_read_receipts" on storage.objects';
+  execute 'drop policy if exists "auth_users_delete_receipts" on storage.objects';
+
   if not exists (
     select 1 from pg_policies
     where schemaname = 'storage' and tablename = 'objects'
@@ -69,7 +73,10 @@ begin
   ) then
     execute 'create policy "auth_users_upload_receipts"
       on storage.objects for insert to authenticated
-      with check (bucket_id = ''receipts'')';
+      with check (
+        bucket_id = ''receipts''
+        and (storage.foldername(name))[1] = auth.uid()::text
+      )';
   end if;
 
   if not exists (
@@ -79,7 +86,10 @@ begin
   ) then
     execute 'create policy "auth_users_read_receipts"
       on storage.objects for select to authenticated
-      using (bucket_id = ''receipts'')';
+      using (
+        bucket_id = ''receipts''
+        and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin())
+      )';
   end if;
 
   if not exists (
@@ -89,6 +99,9 @@ begin
   ) then
     execute 'create policy "auth_users_delete_receipts"
       on storage.objects for delete to authenticated
-      using (bucket_id = ''receipts'')';
+      using (
+        bucket_id = ''receipts''
+        and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin())
+      )';
   end if;
 end $$;

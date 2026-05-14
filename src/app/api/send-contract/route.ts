@@ -41,12 +41,13 @@ export async function POST(req: NextRequest) {
 
     const safeClientName = escapeHtml(clientName || "klijente");
     const safeContractNumber = escapeHtml(contractNumber || "bez-broja");
+    const subjectContractNumber = String(contractNumber || "bez-broja").replace(/[\r\n]/g, " ").slice(0, 120);
     const fileContractNumber = String(contractNumber || "bez-broja").replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 80);
 
     const { error } = await resend.emails.send({
       from: "VTZ Rent-a-Car <onboarding@resend.dev>",
       to: [to],
-      subject: `Ugovor o najmu vozila — ${safeContractNumber}`,
+      subject: `Ugovor o najmu vozila — ${subjectContractNumber}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: #003580; padding: 24px 32px;">

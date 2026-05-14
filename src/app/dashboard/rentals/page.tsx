@@ -238,32 +238,28 @@ export default function RentalsPage() {
     setNewClientForm({ first_name: "", last_name: "", email: "", phone: "", id_number: "", drivers_license: "", license_photo_front: null, license_photo_back: null });
     setDamages([]); setStep(0); setShowModal(true);
   };
+  const createRental = async () => {
+    const res = await fetch("/api/rentals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ form, clientMode, newClient: newClientForm, damages }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || "Najam nije moguće spremiti");
+    return json as { rental: Rental; clientId: string; totalAmount: number; totalDays: number; dailyRate: number };
+  };
+
   const save = async () => {
     setSaving(true);
-    let clientId = form.client_id;
-
-    if (clientMode === "new") {
-      const { data: newClient } = await supabase.from("clients").insert({
-        client_type: "individual",
-        full_name: `${newClientForm.first_name.trim()} ${newClientForm.last_name.trim()}`,
-        email: newClientForm.email || null,
-        phone: newClientForm.phone || null,
-        id_number: newClientForm.id_number || null,
-        drivers_license: newClientForm.drivers_license || null,
-        is_blacklisted: false,
-      }).select().single();
-      if (!newClient) { setSaving(false); return; }
-      clientId = newClient.id;
+    try {
+      const result = await createRental();
+      setSaving(false); setShowModal(false); load();
+      router.refresh();
+      return { rental: result.rental, clientId: result.clientId };
+    } catch (err) {
+      setSaving(false);
+      alert(err instanceof Error ? err.message : "Najam nije moguće spremiti");
     }
-
-    const { data: rental } = await supabase.from("rentals").insert({
-      ...form, client_id: clientId, total_days: totalDays, total_amount: totalAmount, status: "active",
-      damage_report_out: damages.length > 0 ? { pins: damages } : null,
-    }).select().single();
-    if (rental) await supabase.from("vehicles").update({ status: "rented" }).eq("id", form.vehicle_id);
-    setSaving(false); setShowModal(false); load();
-    router.refresh();
-    return { rental, clientId };
   };
 
   const buildContractData = (clientId: string): ContractData => {
@@ -301,38 +297,22 @@ export default function RentalsPage() {
 
   const saveAndDownload = async () => {
     setSaving(true);
-    let clientId = form.client_id;
+    try {
+      const result = await createRental();
+      const contractData = buildContractData(result.clientId);
+      const clientEmail = clientMode === "new"
+        ? (newClientForm.email || undefined)
+        : (clients.find((c) => c.id === result.clientId)?.email || undefined);
 
-    if (clientMode === "new") {
-      const { data: newClient } = await supabase.from("clients").insert({
-        client_type: "individual",
-        full_name: `${newClientForm.first_name.trim()} ${newClientForm.last_name.trim()}`,
-        email: newClientForm.email || null,
-        phone: newClientForm.phone || null,
-        id_number: newClientForm.id_number || null,
-        drivers_license: newClientForm.drivers_license || null,
-        is_blacklisted: false,
-      }).select().single();
-      if (!newClient) { setSaving(false); return; }
-      clientId = newClient.id;
+      setSaving(false);
+      setShowModal(false);
+      load();
+      router.refresh();
+      setContractPreview({ data: contractData, clientEmail });
+    } catch (err) {
+      setSaving(false);
+      alert(err instanceof Error ? err.message : "Najam nije moguće spremiti");
     }
-
-    await supabase.from("rentals").insert({
-      ...form, client_id: clientId, total_days: totalDays, total_amount: totalAmount, status: "active",
-      damage_report_out: damages.length > 0 ? { pins: damages } : null,
-    });
-    await supabase.from("vehicles").update({ status: "rented" }).eq("id", form.vehicle_id);
-
-    const contractData = buildContractData(clientId);
-    const clientEmail = clientMode === "new"
-      ? (newClientForm.email || undefined)
-      : (clients.find((c) => c.id === clientId)?.email || undefined);
-
-    setSaving(false);
-    setShowModal(false);
-    load();
-    router.refresh();
-    setContractPreview({ data: contractData, clientEmail });
   };
   const openReturnModal = (rental: Rental) => {
     setReturnRental(rental);
@@ -344,26 +324,16 @@ export default function RentalsPage() {
   const saveReturn = async () => {
     if (!returnRental) return;
     setReturning(true);
-    await supabase.from("rentals").update({
-      status: "completed",
-      return_km: returnKm,
-      damage_report_in: returnDamages.length > 0 ? { pins: returnDamages } : null,
-    }).eq("id", returnRental.id);
-
-    if (syncDamagesToVehicle && returnDamages.length > 0) {
-      const { data: veh } = await supabase
-        .from("vehicles").select("persistent_damage").eq("id", returnRental.vehicle_id).single();
-      const existing: DamagePin[] = (veh?.persistent_damage as { pins: DamagePin[] } | null)?.pins ?? [];
-      await supabase.from("vehicles").update({
-        status: "free",
-        current_km: returnKm,
-        persistent_damage: { pins: [...existing, ...returnDamages] },
-      }).eq("id", returnRental.vehicle_id);
-    } else {
-      await supabase.from("vehicles").update({
-        status: "free",
-        current_km: returnKm,
-      }).eq("id", returnRental.vehicle_id);
+    const res = await fetch(`/api/rentals/${returnRental.id}/return`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ returnKm, returnDamages, syncDamagesToVehicle }),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      setReturning(false);
+      alert(json.error || "Povrat nije moguće spremiti");
+      return;
     }
 
     setReturning(false); setReturnModal(false); setReturnRental(null); setReturnDamages([]); setReturnKm(0); setSyncDamagesToVehicle(false); load();

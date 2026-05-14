@@ -20,17 +20,17 @@ alter table public.vehicle_expenses enable row level security;
 
 do $$
 begin
+  execute 'drop policy if exists "Allow all for authenticated" on public.vehicle_expenses';
   if not exists (
     select 1 from pg_policies
     where tablename = 'vehicle_expenses'
-      and policyname = 'Allow all for authenticated'
+      and policyname = 'Staff can manage vehicle expenses'
   ) then
-    execute 'create policy "Allow all for authenticated"
+    execute 'create policy "Staff can manage vehicle expenses"
       on public.vehicle_expenses
       for all
-      to authenticated
-      using (true)
-      with check (true)';
+      using (public.is_staff())
+      with check (public.is_staff())';
   end if;
 end $$;
 

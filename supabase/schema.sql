@@ -24,6 +24,14 @@ returns boolean as $$
   );
 $$ language sql stable security definer set search_path = public;
 
+create or replace function is_staff(user_id uuid default auth.uid())
+returns boolean as $$
+  select exists (
+    select 1 from public.profiles
+    where id = user_id and role in ('admin', 'agent')
+  );
+$$ language sql stable security definer set search_path = public;
+
 create or replace function enforce_profile_role_change()
 returns trigger as $$
 begin
@@ -81,11 +89,27 @@ create table vehicles (
 );
 
 alter table vehicles enable row level security;
-create policy "All authenticated users can view vehicles" on vehicles for select using (auth.role() = 'authenticated');
-create policy "Admins can manage vehicles" on vehicles for all using (
-  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-);
-create policy "Agents can update vehicle status" on vehicles for update using (auth.role() = 'authenticated');
+create or replace function enforce_vehicle_staff_update()
+returns trigger as $$
+begin
+  if not public.is_admin(auth.uid()) then
+    if (to_jsonb(new) - 'status' - 'current_km' - 'persistent_damage' - 'updated_at')
+       is distinct from
+       (to_jsonb(old) - 'status' - 'current_km' - 'persistent_damage' - 'updated_at') then
+      raise exception 'Agents can only update operational vehicle fields';
+    end if;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+create trigger protect_vehicle_staff_updates
+  before update on vehicles
+  for each row execute function enforce_vehicle_staff_update();
+
+create policy "Staff can view vehicles" on vehicles for select using (public.is_staff());
+create policy "Admins can manage vehicles" on vehicles for all using (public.is_admin()) with check (public.is_admin());
+create policy "Staff can update operational vehicle fields" on vehicles for update using (public.is_staff()) with check (public.is_staff());
 
 -- =====================
 -- VEHICLE COSTS (maintenance, insurance, etc.)
@@ -102,10 +126,8 @@ create table vehicle_costs (
 );
 
 alter table vehicle_costs enable row level security;
-create policy "All authenticated can view costs" on vehicle_costs for select using (auth.role() = 'authenticated');
-create policy "Admins can manage costs" on vehicle_costs for all using (
-  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-);
+create policy "Staff can view costs" on vehicle_costs for select using (public.is_staff());
+create policy "Admins can manage costs" on vehicle_costs for all using (public.is_admin()) with check (public.is_admin());
 
 -- =====================
 -- CLIENTS
@@ -129,12 +151,10 @@ create table clients (
 );
 
 alter table clients enable row level security;
-create policy "All authenticated can view clients" on clients for select using (auth.role() = 'authenticated');
-create policy "All authenticated can insert clients" on clients for insert with check (auth.role() = 'authenticated');
-create policy "All authenticated can update clients" on clients for update using (auth.role() = 'authenticated');
-create policy "Admins can delete clients" on clients for delete using (
-  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-);
+create policy "Staff can view clients" on clients for select using (public.is_staff());
+create policy "Staff can insert clients" on clients for insert with check (public.is_staff());
+create policy "Staff can update clients" on clients for update using (public.is_staff()) with check (public.is_staff());
+create policy "Admins can delete clients" on clients for delete using (public.is_admin());
 
 -- =====================
 -- SHORT-TERM RENTALS
@@ -163,12 +183,10 @@ create table rentals (
 );
 
 alter table rentals enable row level security;
-create policy "All authenticated can view rentals" on rentals for select using (auth.role() = 'authenticated');
-create policy "All authenticated can insert rentals" on rentals for insert with check (auth.role() = 'authenticated');
-create policy "All authenticated can update rentals" on rentals for update using (auth.role() = 'authenticated');
-create policy "Admins can delete rentals" on rentals for delete using (
-  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-);
+create policy "Staff can view rentals" on rentals for select using (public.is_staff());
+create policy "Staff can insert rentals" on rentals for insert with check (public.is_staff());
+create policy "Staff can update rentals" on rentals for update using (public.is_staff()) with check (public.is_staff());
+create policy "Admins can delete rentals" on rentals for delete using (public.is_admin());
 
 -- =====================
 -- LEASING OFFERS (long-term / B2B)
@@ -207,9 +225,7 @@ create table leasing_offers (
 );
 
 alter table leasing_offers enable row level security;
-create policy "Admins only leasing" on leasing_offers for all using (
-  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-);
+create policy "Admins only leasing" on leasing_offers for all using (public.is_admin()) with check (public.is_admin());
 
 -- =====================
 -- VIEWS

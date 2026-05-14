@@ -1,5 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+const MAX_RECEIPT_BYTES = 5 * 1024 * 1024;
+const RECEIPT_TYPES: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "application/pdf": "pdf",
+};
+
 /**
  * Uploads a receipt image to the `receipts` storage bucket and returns the path.
  * Returns null if no file given or upload fails.
@@ -11,8 +19,19 @@ export async function uploadReceipt(
 ): Promise<string | null> {
   if (!file) return null;
 
-  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-  const path = `${prefix}/${crypto.randomUUID()}.${ext}`;
+  const ext = RECEIPT_TYPES[file.type];
+  if (!ext || file.size > MAX_RECEIPT_BYTES) {
+    console.error("Receipt upload rejected: invalid type or size");
+    return null;
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const safePrefix = prefix.replace(/[^a-zA-Z0-9/_-]/g, "").replace(/^\/+|\/+$/g, "") || "receipts";
+  const path = `${user.id}/${safePrefix}/${crypto.randomUUID()}.${ext}`;
 
   const { error } = await supabase.storage.from("receipts").upload(path, file, {
     contentType: file.type,
