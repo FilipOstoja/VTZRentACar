@@ -16,18 +16,39 @@ create table profiles (
 
 alter table profiles enable row level security;
 
+create or replace function is_admin(user_id uuid default auth.uid())
+returns boolean as $$
+  select exists (
+    select 1 from public.profiles
+    where id = user_id and role = 'admin'
+  );
+$$ language sql stable security definer set search_path = public;
+
+create or replace function enforce_profile_role_change()
+returns trigger as $$
+begin
+  if new.role is distinct from old.role and not public.is_admin(auth.uid()) then
+    raise exception 'Only admins can change profile roles';
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+create trigger protect_profile_roles
+  before update on profiles
+  for each row execute function enforce_profile_role_change();
+
 create policy "Users can view own profile" on profiles for select using (auth.uid() = id);
-create policy "Admins can view all profiles" on profiles for select using (
-  exists (select 1 from profiles where id = auth.uid() and role = 'admin')
-);
-create policy "Users can update own profile" on profiles for update using (auth.uid() = id);
+create policy "Admins can view all profiles" on profiles for select using (public.is_admin());
+create policy "Users can update own profile" on profiles for update using (auth.uid() = id) with check (auth.uid() = id);
+create policy "Admins can update profiles" on profiles for update using (public.is_admin()) with check (true);
 
 -- Auto-create profile on signup
 create or replace function handle_new_user()
 returns trigger as $$
 begin
   insert into profiles (id, full_name, role)
-  values (new.id, new.raw_user_meta_data->>'full_name', coalesce(new.raw_user_meta_data->>'role', 'agent'));
+  values (new.id, new.raw_user_meta_data->>'full_name', 'agent');
   return new;
 end;
 $$ language plpgsql security definer;

@@ -11,6 +11,7 @@ import {
 
 // ── Types ──────────────────────────────────────────────────────
 type Period = "this_month" | "last_month" | "3m" | "ytd" | "all";
+type DateRange = { from: string; to: string };
 type CategoryFilter = "all" | "fuel" | "maintenance" | "insurance" | "washing" | "tyre" | "other" | "registration";
 
 interface Vehicle {
@@ -25,6 +26,9 @@ interface Rental {
 interface Expense {
   id: string; vehicle_id: string; date: string; type: string; amount: number;
 }
+type DrillModal =
+  | { kind: "expenses"; title: string; rows: Expense[] }
+  | { kind: "revenue"; title: string; rows: Rental[] };
 
 // ── Constants ──────────────────────────────────────────────────
 const PERIOD_LABELS: Record<Period, string> = {
@@ -38,10 +42,11 @@ const CATEGORY_COLORS: Record<string, string> = {
   fuel: "#f97316", maintenance: "#3b82f6", insurance: "#8b5cf6",
   washing: "#06b6d4", tyre: "#64748b", other: "#94a3b8", registration: "#10b981",
 };
+const VEHICLE_REVENUE_COLORS = ["#f59e0b", "#003580", "#10b981", "#ef4444", "#8b5cf6", "#06b6d4", "#64748b", "#f97316"];
 const DOW_LABELS = ["Pon", "Uto", "Sri", "Čet", "Pet", "Sub", "Ned"];
 
 // ── Utilities ──────────────────────────────────────────────────
-function periodRange(p: Period): { from: string; to: string } {
+function periodRange(p: Period): DateRange {
   const now = new Date();
   const today = now.toISOString().slice(0, 10);
   if (p === "this_month") return { from: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10), to: today };
@@ -51,12 +56,41 @@ function periodRange(p: Period): { from: string; to: string } {
   return { from: "1900-01-01", to: today };
 }
 
-function prevPeriodRange(p: Period): { from: string; to: string } | null {
+function customPeriodRange(from: string, to: string): DateRange | null {
+  if (!from) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  const end = to || today;
+  return { from, to: end < from ? from : end };
+}
+
+function previousMatchingRange(range: DateRange): DateRange {
+  const fromDate = new Date(`${range.from}T00:00:00`);
+  const toDate = new Date(`${range.to}T00:00:00`);
+  const lengthDays = Math.max(1, Math.round((toDate.getTime() - fromDate.getTime()) / 86400000) + 1);
+  const prevTo = new Date(fromDate);
+  prevTo.setDate(prevTo.getDate() - 1);
+  const prevFrom = new Date(prevTo);
+  prevFrom.setDate(prevTo.getDate() - lengthDays + 1);
+  return {
+    from: prevFrom.toISOString().slice(0, 10),
+    to: prevTo.toISOString().slice(0, 10),
+  };
+}
+
+function prevPeriodRange(p: Period): DateRange | null {
   const now = new Date();
   if (p === "this_month") return { from: new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().slice(0, 10), to: new Date(now.getFullYear(), now.getMonth(), 0).toISOString().slice(0, 10) };
   if (p === "last_month") return { from: new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString().slice(0, 10), to: new Date(now.getFullYear(), now.getMonth() - 1, 0).toISOString().slice(0, 10) };
   if (p === "3m") return { from: new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString().slice(0, 10), to: new Date(now.getFullYear(), now.getMonth() - 3, 0).toISOString().slice(0, 10) };
   if (p === "ytd") return { from: `${now.getFullYear() - 1}-01-01`, to: `${now.getFullYear() - 1}-12-31` };
+  return null;
+}
+
+function periodComparisonLabel(p: Period): string | null {
+  if (p === "this_month") return "prošli mjesec";
+  if (p === "last_month") return "mjesec prije";
+  if (p === "3m") return "prethodna 3 mjeseca";
+  if (p === "ytd") return "prošlu godinu";
   return null;
 }
 
@@ -85,13 +119,27 @@ function Sparkline({ data, positive = true }: { data: number[]; positive?: boole
 }
 
 // ── Trend arrow ────────────────────────────────────────────────
-function TrendBadge({ current, prev }: { current: number; prev: number }) {
+function TrendBadge({ current, prev, comparisonLabel }: { current: number; prev: number; comparisonLabel: string }) {
   if (prev === 0) return null;
   const delta = ((current - prev) / Math.abs(prev)) * 100;
   const up = delta >= 0;
+  const amount = Math.abs(delta).toFixed(0);
+  const description = `${amount}% ${up ? "više" : "manje"} u odnosu na ${comparisonLabel}.`;
   return (
-    <span className={clsx("inline-flex items-center gap-0.5 text-[11px] font-bold px-1.5 py-0.5 rounded", up ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600")}>
-      {up ? "▲" : "▼"} {Math.abs(delta).toFixed(0)}%
+    <span className="relative inline-flex group">
+      <span
+        tabIndex={0}
+        aria-label={description}
+        className={clsx(
+          "inline-flex cursor-help items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-bold outline-none focus:ring-2 focus:ring-[#003580]/20",
+          up ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"
+        )}
+      >
+        {up ? "▲" : "▼"} {amount}%
+      </span>
+      <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-max max-w-56 -translate-x-1/2 rounded-md bg-slate-900 px-2 py-1 text-[11px] font-semibold text-white shadow-lg group-hover:block group-focus-within:block">
+        {description}
+      </span>
     </span>
   );
 }
@@ -122,12 +170,16 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   const [period, setPeriod] = useState<Period>("this_month");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [vehicleId, setVehicleId] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"profit" | "revenue" | "costs">("profit");
-  const [drillCategory, setDrillCategory] = useState<string | null>(null);
+  const [drillModal, setDrillModal] = useState<DrillModal | null>(null);
   const [showCosts, setShowCosts] = useState(false);
   const [yearlyExpenses, setYearlyExpenses] = useState<Expense[]>([]);
+  const selectedRange = useMemo(() => customPeriodRange(customFrom, customTo) ?? periodRange(period), [customFrom, customTo, period]);
+  const customPeriodActive = customFrom.length > 0;
 
   // Auth gate
   useEffect(() => {
@@ -147,10 +199,10 @@ export default function AnalyticsPage() {
     if (role !== "admin") return;
     const load = async () => {
       setLoading(true);
-      const { from, to } = periodRange(period);
+      const { from, to } = selectedRange;
       const today = new Date().toISOString().slice(0, 10);
       const in30 = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
-      const prev = prevPeriodRange(period);
+      const prev = customPeriodActive ? previousMatchingRange({ from, to }) : prevPeriodRange(period);
 
       const yearStart = `${new Date().getFullYear()}-01-01`;
       const [vRes, rRes, eRes, prevRes, allRes, yearExpRes] = await Promise.all([
@@ -187,15 +239,14 @@ export default function AnalyticsPage() {
       setLoading(false);
     };
     load();
-  }, [period, role]);
+  }, [selectedRange, customPeriodActive, period, role]);
 
   // ── Computed ──────────────────────────────────────────────────
   const filteredExpenses = useMemo(() =>
     expenses.filter(e =>
       (category === "all" || e.type === category) &&
-      (vehicleId === "all" || e.vehicle_id === vehicleId) &&
-      (!drillCategory || e.type === drillCategory)
-    ), [expenses, category, vehicleId, drillCategory]);
+      (vehicleId === "all" || e.vehicle_id === vehicleId)
+    ), [expenses, category, vehicleId]);
 
   const filteredRentals = useMemo(() =>
     rentals.filter(r => vehicleId === "all" || r.vehicle_id === vehicleId),
@@ -205,7 +256,18 @@ export default function AnalyticsPage() {
   const totalCosts = filteredExpenses.reduce((s, e) => s + Number(e.amount || 0), 0);
   const netProfit = totalRevenue - totalCosts;
   const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
-  const prevRevenue = prevRentals.reduce((s, r) => s + Number(r.total_amount || 0), 0);
+  const prevRevenue = prevRentals
+    .filter(r => vehicleId === "all" || r.vehicle_id === vehicleId)
+    .reduce((s, r) => s + Number(r.total_amount || 0), 0);
+  const trendComparisonLabel = customPeriodActive ? "prethodni isti period" : periodComparisonLabel(period);
+  const hasActiveFilters = category !== "all" || vehicleId !== "all" || customPeriodActive || period !== "this_month";
+  const resetFilters = () => {
+    setCategory("all");
+    setVehicleId("all");
+    setPeriod("this_month");
+    setCustomFrom("");
+    setCustomTo("");
+  };
 
   const utilization = useMemo(() => {
     const active = vehicles.filter(v => v.status !== "inactive");
@@ -253,6 +315,34 @@ export default function AnalyticsPage() {
     })).sort((a, b) => b.value - a.value);
   }, [expenses, vehicleId]);
 
+  const vehicleLookup = useMemo(() => new Map(vehicles.map(v => [v.id, `${v.make} ${v.model} (${v.registration})`])), [vehicles]);
+  const vehicleName = (id: string) => vehicleLookup.get(id) || "Nepoznato vozilo";
+
+  const vehicleRevenueBreakdown = useMemo(() => {
+    const sums = new Map<string, { vehicleId: string; name: string; value: number; color: string }>();
+    filteredRentals.forEach(r => {
+      const current = sums.get(r.vehicle_id) || {
+        vehicleId: r.vehicle_id,
+        name: vehicleName(r.vehicle_id),
+        value: 0,
+        color: VEHICLE_REVENUE_COLORS[sums.size % VEHICLE_REVENUE_COLORS.length],
+      };
+      current.value += Number(r.total_amount || 0);
+      sums.set(r.vehicle_id, current);
+    });
+    return Array.from(sums.values()).sort((a, b) => b.value - a.value);
+  }, [filteredRentals, vehicleLookup]);
+
+  const openExpenseDetails = (type: string) => {
+    const rows = expenses.filter(e => (vehicleId === "all" || e.vehicle_id === vehicleId) && e.type === type);
+    setDrillModal({ kind: "expenses", title: CATEGORY_LABELS[type] || type, rows });
+  };
+
+  const openRevenueDetails = (selectedVehicleId: string) => {
+    const rows = filteredRentals.filter(r => r.vehicle_id === selectedVehicleId);
+    setDrillModal({ kind: "revenue", title: vehicleName(selectedVehicleId), rows });
+  };
+
   const vehicleStats = useMemo(() => {
     return vehicles.map(v => {
       const vRentals = rentals.filter(r => r.vehicle_id === v.id);
@@ -294,6 +384,12 @@ export default function AnalyticsPage() {
     });
   }, [allTimeRentals, yearlyExpenses]);
 
+  const drillModalTotal = drillModal
+    ? drillModal.kind === "expenses"
+      ? drillModal.rows.reduce((sum, row) => sum + Number(row.amount || 0), 0)
+      : drillModal.rows.reduce((sum, row) => sum + Number(row.total_amount || 0), 0)
+    : 0;
+
   if (role !== "admin") {
     return <div className="min-h-screen flex items-center justify-center bg-[#F7F9FC]"><p className="text-slate-400 text-sm">Učitavanje...</p></div>;
   }
@@ -302,21 +398,14 @@ export default function AnalyticsPage() {
     <div className="min-h-screen bg-[#F7F9FC]">
       <div className="p-4 sm:p-6 max-w-[1440px] mx-auto space-y-5">
 
-        {/* ── Header + period pills ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+        {/* ── Header ── */}
+        <div>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold text-[#003580] tracking-tight">Analitika</h1>
               <span className="text-[10px] font-bold bg-[#003580]/10 text-[#003580] px-2 py-0.5 rounded uppercase tracking-wide">CEO View</span>
             </div>
             <p className="text-sm text-slate-500 mt-0.5">Prihod · Troškovi · Profit · Upozorenja</p>
-          </div>
-          <div className="flex items-center gap-1 bg-white border border-[#E7E7E7] rounded-lg p-1 shadow-sm self-start sm:self-auto flex-wrap">
-            {(Object.keys(PERIOD_LABELS) as Period[]).map(p => (
-              <button key={p} onClick={() => setPeriod(p)} className={clsx("px-3 py-1.5 rounded-md text-xs font-semibold transition-all whitespace-nowrap", period === p ? "bg-[#003580] text-white shadow-sm" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50")}>
-                {PERIOD_LABELS[p]}
-              </button>
-            ))}
           </div>
         </div>
 
@@ -375,7 +464,7 @@ export default function AnalyticsPage() {
             <div className="text-xl font-black text-emerald-600 leading-none tabular-nums">{fmt(totalRevenue)}</div>
             <div className="flex items-center gap-2 mt-2">
               <Sparkline data={sparkData} positive />
-              {prevRevenue > 0 && <TrendBadge current={totalRevenue} prev={prevRevenue} />}
+              {prevRevenue > 0 && trendComparisonLabel && <TrendBadge current={totalRevenue} prev={prevRevenue} comparisonLabel={trendComparisonLabel} />}
             </div>
           </div>
 
@@ -414,6 +503,54 @@ export default function AnalyticsPage() {
 
         {/* ── Filters ── */}
         <div className="flex flex-wrap items-center gap-3 bg-white border border-[#E7E7E7] rounded-xl shadow-sm px-4 py-3 text-sm">
+          <div className="flex flex-wrap items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
+            {(Object.keys(PERIOD_LABELS) as Period[]).map(p => (
+              <button
+                key={p}
+                onClick={() => { setPeriod(p); setCustomFrom(""); setCustomTo(""); }}
+                className={clsx(
+                  "px-3 py-1.5 rounded-md text-xs font-semibold transition-all whitespace-nowrap",
+                  !customPeriodActive && period === p
+                    ? "bg-[#003580] text-white shadow-sm"
+                    : "text-slate-500 hover:text-slate-800 hover:bg-white"
+                )}
+              >
+                {PERIOD_LABELS[p]}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Tačno:</span>
+            <label className="flex items-center gap-1.5">
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Od</span>
+              <input
+                type="date"
+                value={customFrom}
+                onChange={e => {
+                  const next = e.target.value;
+                  setCustomFrom(next);
+                  if (!next || (customTo && customTo < next)) setCustomTo("");
+                }}
+                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]"
+              />
+            </label>
+            <label className="flex items-center gap-1.5">
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Do</span>
+              <input
+                type="date"
+                value={customTo}
+                min={customFrom || undefined}
+                disabled={!customFrom}
+                onChange={e => setCustomTo(e.target.value)}
+                className={clsx(
+                  "bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]",
+                  !customFrom && "cursor-not-allowed opacity-50"
+                )}
+              />
+            </label>
+          </div>
+
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Trošak:</span>
             <select value={category} onChange={e => setCategory(e.target.value as CategoryFilter)} className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]">
@@ -421,6 +558,7 @@ export default function AnalyticsPage() {
               {Object.entries(CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </div>
+
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Vozilo:</span>
             <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]">
@@ -428,15 +566,13 @@ export default function AnalyticsPage() {
               {vehicles.map(v => <option key={v.id} value={v.id}>{v.make} {v.model} ({v.registration})</option>)}
             </select>
           </div>
-          {drillCategory && (
-            <button onClick={() => setDrillCategory(null)} className="ml-auto text-xs font-semibold text-[#003580] hover:underline">
-              ✕ Ukloni drill-down: {CATEGORY_LABELS[drillCategory]}
-            </button>
-          )}
-          {(category !== "all" || vehicleId !== "all") && !drillCategory && (
-            <button onClick={() => { setCategory("all"); setVehicleId("all"); }} className="ml-auto text-xs font-semibold text-slate-400 hover:text-[#003580]">
-              ✕ Resetuj filtere
-            </button>
+
+          {hasActiveFilters && (
+            <div className="flex flex-wrap items-center gap-3 lg:ml-auto">
+              <button onClick={resetFilters} className="text-xs font-semibold text-slate-400 hover:text-[#003580]">
+                ✕ Resetuj filtere
+              </button>
+            </div>
           )}
         </div>
 
@@ -536,7 +672,7 @@ export default function AnalyticsPage() {
               <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5">
                 <div className="mb-4">
                   <h2 className="text-base font-semibold text-slate-800">Struktura troškova</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Klikni kategoriju za drill-down</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Klikni kategoriju ili legendu za detalje</p>
                 </div>
                 {categoryBreakdown.length === 0 ? (
                   <div className="py-12 text-center text-sm text-slate-400">Nema troškova</div>
@@ -548,11 +684,11 @@ export default function AnalyticsPage() {
                           <Pie
                             data={categoryBreakdown} dataKey="value" nameKey="name"
                             cx="50%" cy="50%" innerRadius={44} outerRadius={80} paddingAngle={2}
-                            onClick={(d) => { setDrillCategory(d.type === drillCategory ? null : d.type); }}
+                            onClick={(d: any) => openExpenseDetails(d.type)}
                             style={{ cursor: "pointer" }}
                           >
                             {categoryBreakdown.map(entry => (
-                              <Cell key={entry.type} fill={CATEGORY_COLORS[entry.type] || "#94a3b8"} opacity={drillCategory && drillCategory !== entry.type ? 0.3 : 1} />
+                              <Cell key={entry.type} fill={CATEGORY_COLORS[entry.type] || "#94a3b8"} />
                             ))}
                           </Pie>
                           <Tooltip formatter={(v: number) => fmtFull(v)} contentStyle={{ borderRadius: 8, border: "1px solid #E7E7E7", fontSize: 12 }} />
@@ -566,8 +702,8 @@ export default function AnalyticsPage() {
                         return (
                           <button
                             key={c.type}
-                            onClick={() => setDrillCategory(c.type === drillCategory ? null : c.type)}
-                            className={clsx("w-full flex items-center justify-between text-xs rounded-lg px-2 py-1.5 transition-colors text-left", drillCategory === c.type ? "bg-slate-100" : "hover:bg-slate-50")}
+                            onClick={() => openExpenseDetails(c.type)}
+                            className="w-full flex items-center justify-between text-xs rounded-lg px-2 py-1.5 transition-colors text-left hover:bg-slate-50"
                           >
                             <div className="flex items-center gap-2">
                               <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: CATEGORY_COLORS[c.type] || "#94a3b8" }} />
@@ -584,6 +720,60 @@ export default function AnalyticsPage() {
                   </div>
                 )}
               </div>
+
+              {vehicleId === "all" && (
+                <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5">
+                  <div className="mb-4">
+                    <h2 className="text-base font-semibold text-slate-800">Struktura prihoda po vozilu</h2>
+                    <p className="text-xs text-slate-400 mt-0.5">Klikni vozilo ili legendu za prikaz najma</p>
+                  </div>
+                  {vehicleRevenueBreakdown.length === 0 ? (
+                    <div className="py-12 text-center text-sm text-slate-400">Nema prihoda</div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4 items-center">
+                      <div className="h-52">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={vehicleRevenueBreakdown} dataKey="value" nameKey="name"
+                              cx="50%" cy="50%" innerRadius={44} outerRadius={80} paddingAngle={2}
+                              onClick={(d: any) => openRevenueDetails(d.vehicleId)}
+                              style={{ cursor: "pointer" }}
+                            >
+                              {vehicleRevenueBreakdown.map(entry => (
+                                <Cell key={entry.vehicleId} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(v: number) => fmtFull(v)} contentStyle={{ borderRadius: 8, border: "1px solid #E7E7E7", fontSize: 12 }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="space-y-2">
+                        {vehicleRevenueBreakdown.map(c => {
+                          const total = vehicleRevenueBreakdown.reduce((s, x) => s + x.value, 0);
+                          const p = total > 0 ? (c.value / total) * 100 : 0;
+                          return (
+                            <button
+                              key={c.vehicleId}
+                              onClick={() => openRevenueDetails(c.vehicleId)}
+                              className="w-full flex items-center justify-between text-xs rounded-lg px-2 py-1.5 transition-colors text-left hover:bg-slate-50"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: c.color }} />
+                                <span className="font-medium text-slate-700 truncate">{c.name}</span>
+                              </div>
+                              <div className="text-right ml-2 flex-shrink-0">
+                                <div className="font-bold text-slate-800">{fmtFull(c.value)}</div>
+                                <div className="text-[10px] text-slate-400">{p.toFixed(1)}%</div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* ── Cost per KM ── */}
@@ -698,6 +888,73 @@ export default function AnalyticsPage() {
           </>
         )}
       </div>
+
+      {drillModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white border border-[#E7E7E7] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-slide-up">
+            <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 rounded-t-2xl">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-800">
+                    {drillModal.kind === "expenses" ? "Troškovi" : "Prihod"} · {drillModal.title}
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {drillModal.rows.length} zapisa · Ukupno {fmtFull(drillModalTotal)}
+                  </p>
+                </div>
+                <button onClick={() => setDrillModal(null)} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {drillModal.rows.length === 0 ? (
+                <div className="py-14 text-center text-sm text-slate-400">Nema zapisa za odabrani segment</div>
+              ) : (
+                <div className="overflow-x-auto border border-[#E7E7E7] rounded-xl">
+                  <table className="w-full min-w-[680px] text-left">
+                    <thead className="bg-slate-50 border-b border-[#E7E7E7]">
+                      <tr>
+                        {(drillModal.kind === "expenses"
+                          ? ["Datum", "Vozilo", "Kategorija", "Iznos"]
+                          : ["Od", "Do", "Vozilo", "Status", "Iznos"]
+                        ).map(h => (
+                          <th key={h} className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {drillModal.kind === "expenses" ? (
+                        drillModal.rows.map(row => (
+                          <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{row.date}</td>
+                            <td className="px-4 py-3 text-sm font-semibold text-slate-700">{vehicleName(row.vehicle_id)}</td>
+                            <td className="px-4 py-3 text-sm text-slate-600">{CATEGORY_LABELS[row.type] || row.type}</td>
+                            <td className="px-4 py-3 text-sm font-bold text-red-500 whitespace-nowrap">{fmtFull(Number(row.amount || 0))}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        drillModal.rows.map(row => (
+                          <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{row.start_date}</td>
+                            <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">{row.end_date || "—"}</td>
+                            <td className="px-4 py-3 text-sm font-semibold text-slate-700">{vehicleName(row.vehicle_id)}</td>
+                            <td className="px-4 py-3 text-sm text-slate-600">{row.status}</td>
+                            <td className="px-4 py-3 text-sm font-bold text-emerald-600 whitespace-nowrap">{fmtFull(Number(row.total_amount || 0))}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
