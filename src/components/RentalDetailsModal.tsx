@@ -68,10 +68,10 @@ export default function RentalDetailsModal({ rental, onClose, onCloseRental }: P
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white border border-[#E7E7E7] rounded-2xl shadow-2xl w-full max-w-xl animate-slide-up flex flex-col max-h-[92vh]">
+      <div className="bg-white border border-ink-150 rounded-2xl shadow-2xl w-full max-w-xl animate-slide-up flex flex-col max-h-[92vh]">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#E7E7E7] flex-shrink-0">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-ink-150 flex-shrink-0">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h2 className="text-lg font-bold text-slate-800">Detalji najma</h2>
@@ -81,7 +81,7 @@ export default function RentalDetailsModal({ rental, onClose, onCloseRental }: P
             </div>
             <p className="text-sm text-slate-500">
               {rental.vehicles?.make} {rental.vehicles?.model}
-              <span className="ml-2 text-[#003580] font-mono text-xs font-semibold">
+              <span className="ml-2 text-brand-500 font-mono text-xs font-semibold">
                 {rental.vehicles?.registration}
               </span>
             </p>
@@ -107,7 +107,7 @@ export default function RentalDetailsModal({ rental, onClose, onCloseRental }: P
             {rental.clients?.phone && (
               <a
                 href={`tel:${rental.clients.phone}`}
-                className="text-xs text-[#003580] font-medium hover:underline"
+                className="text-xs text-brand-500 font-medium hover:underline"
               >
                 {rental.clients.phone}
               </a>
@@ -117,7 +117,7 @@ export default function RentalDetailsModal({ rental, onClose, onCloseRental }: P
           {/* Period */}
           <div>
             <SectionLabel>Period</SectionLabel>
-            <div className="bg-slate-50 border border-[#E7E7E7] rounded-xl p-3 space-y-1.5">
+            <div className="bg-slate-50 border border-ink-150 rounded-xl p-3 space-y-1.5">
               <Row label="Od" value={formatDate(rental.start_date)} />
               <Row label="Do" value={formatDate(rental.end_date)} />
               <Row label="Broj dana" value={`${rental.total_days ?? 0} dan(a)`} />
@@ -127,7 +127,7 @@ export default function RentalDetailsModal({ rental, onClose, onCloseRental }: P
           {/* Finansije */}
           <div>
             <SectionLabel>Finansije</SectionLabel>
-            <div className="bg-slate-50 border border-[#E7E7E7] rounded-xl p-3 space-y-1.5">
+            <div className="bg-slate-50 border border-ink-150 rounded-xl p-3 space-y-1.5">
               <Row
                 label="Dnevna tarifa"
                 value={
@@ -157,7 +157,7 @@ export default function RentalDetailsModal({ rental, onClose, onCloseRental }: P
           {/* Kilometraža */}
           <div>
             <SectionLabel>Kilometraža</SectionLabel>
-            <div className="bg-slate-50 border border-[#E7E7E7] rounded-xl p-3 space-y-1.5">
+            <div className="bg-slate-50 border border-ink-150 rounded-xl p-3 space-y-1.5">
               <Row
                 label="Pri preuzimanju"
                 value={`${(rental.pickup_km ?? 0).toLocaleString("hr-HR")} km`}
@@ -187,10 +187,10 @@ export default function RentalDetailsModal({ rental, onClose, onCloseRental }: P
           {/* Preuzimanje */}
           <div>
             <SectionLabel>Preuzimanje</SectionLabel>
-            <div className="bg-slate-50 border border-[#E7E7E7] rounded-xl p-3 flex items-center gap-3">
+            <div className="bg-slate-50 border border-ink-150 rounded-xl p-3 flex items-center gap-3">
               {rental.pickup_type === "airport" ? (
                 <>
-                  <div className="w-9 h-9 rounded-full bg-[#003580] flex items-center justify-center flex-shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-brand-500 flex items-center justify-center flex-shrink-0">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 20 3c-1-1-3-1-4.5.5L12 7 3.8 5.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>
                     </svg>
@@ -271,7 +271,7 @@ export default function RentalDetailsModal({ rental, onClose, onCloseRental }: P
         </div>
 
         {/* Footer */}
-        <div className="flex flex-wrap gap-2 justify-end px-6 py-4 border-t border-[#E7E7E7] flex-shrink-0">
+        <div className="flex flex-wrap gap-2 justify-end px-6 py-4 border-t border-ink-150 flex-shrink-0">
           <button onClick={onClose} className="btn-secondary">Zatvori</button>
           {isActive && (
             <button onClick={onCloseRental} className="btn-primary">

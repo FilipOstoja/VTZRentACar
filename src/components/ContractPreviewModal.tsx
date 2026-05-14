@@ -105,10 +105,10 @@ export default function ContractPreviewModal({ contractData, clientEmail, onClos
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white border border-[#E7E7E7] rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[94vh] animate-slide-up">
+      <div className="bg-white border border-ink-150 rounded-2xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[94vh] animate-slide-up">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-[#E7E7E7] flex-shrink-0">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-ink-150 flex-shrink-0">
           <div>
             <h2 className="text-lg font-bold text-slate-800">Pregled ugovora</h2>
             <p className="text-sm text-slate-500 mt-0.5">
@@ -174,7 +174,7 @@ export default function ContractPreviewModal({ contractData, clientEmail, onClos
 
         {/* Signature section — shown only on touch/tablet */}
         {isTouch && !signed && (
-          <div className="border-t border-[#E7E7E7] px-6 py-4 flex-shrink-0 space-y-3">
+          <div className="border-t border-ink-150 px-6 py-4 flex-shrink-0 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-slate-700">Digitalni potpisi</h3>
               <div className="flex gap-2">
@@ -198,7 +198,7 @@ export default function ContractPreviewModal({ contractData, clientEmail, onClos
             <button
               onClick={handleSignAndSend}
               disabled={signing}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#003580] text-white text-sm font-semibold hover:bg-[#00256a] disabled:opacity-60 transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-[#00256a] disabled:opacity-60 transition-colors"
             >
               {signing ? (
                 <>
@@ -247,7 +247,7 @@ export default function ContractPreviewModal({ contractData, clientEmail, onClos
 
         {/* Footer bar when not touch (no signatures needed) */}
         {!isTouch && (
-          <div className="border-t border-[#E7E7E7] px-6 py-3 flex-shrink-0 flex items-center justify-between">
+          <div className="border-t border-ink-150 px-6 py-3 flex-shrink-0 flex items-center justify-between">
             <p className="text-xs text-slate-400">
               PDF ugovor je spreman. Preuzmite ili isprintajte kopiju.
             </p>

@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import clsx from "clsx";
 import ReceiptUpload from "@/components/expenses/ReceiptUpload";
+import { Skeleton } from "@/components/ui/Skeleton";
 import ReceiptLightbox from "@/components/expenses/ReceiptLightbox";
 import { uploadReceipt, getReceiptUrl } from "@/lib/receipts";
 import { CarDamageInspector, type DamagePin } from "@/components/CarDamageInspector";
@@ -339,15 +340,49 @@ export default function VehicleDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F7F9FC] flex items-center justify-center">
-        <div className="text-slate-400 text-sm">Učitavanje...</div>
+      <div className="min-h-screen bg-ink-50" aria-busy="true" aria-label="Učitavanje vozila">
+        <div className="p-4 sm:p-6 max-w-[1440px] mx-auto space-y-5">
+          {/* header skeleton */}
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-9 h-9" rounded="lg" />
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+          </div>
+          {/* hero card skeleton */}
+          <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5 flex flex-col sm:flex-row gap-5">
+            <Skeleton className="w-full sm:w-64 h-40" rounded="lg" />
+            <div className="flex-1 space-y-3">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-3 w-24" />
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i}>
+                    <Skeleton className="h-2.5 w-16 mb-2" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          {/* tabs skeleton */}
+          <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5 space-y-4">
+            <div className="flex gap-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-9 w-24" rounded="lg" />
+              ))}
+            </div>
+            <Skeleton className="h-32 w-full" rounded="lg" />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!vehicle) {
     return (
-      <div className="min-h-screen bg-[#F7F9FC] flex items-center justify-center">
+      <div className="min-h-screen bg-ink-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-slate-500 mb-4">Vozilo nije pronađeno.</p>
           <button onClick={() => router.push("/dashboard/fleet")} className="btn-primary">Nazad na flotu</button>
@@ -357,13 +392,13 @@ export default function VehicleDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC]">
+    <div className="min-h-screen bg-ink-50">
       <div className="p-4 sm:p-6 max-w-[1200px] mx-auto space-y-4 sm:space-y-6">
 
         {/* Back nav */}
         <button
           onClick={() => router.push("/dashboard/fleet")}
-          className="flex items-center gap-2 text-sm text-slate-500 hover:text-[#003580] transition-colors font-medium"
+          className="flex items-center gap-2 text-sm text-slate-500 hover:text-brand-500 transition-colors font-medium"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"/>
@@ -372,7 +407,7 @@ export default function VehicleDetailPage() {
         </button>
 
         {/* ── Hero card ── */}
-        <div className="bg-white border border-[#E7E7E7] rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-ink-150 rounded-2xl shadow-sm overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-5">
 
             {/* Car visual */}
@@ -438,7 +473,7 @@ export default function VehicleDetailPage() {
                     <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">{s.label}</div>
                     <div className={clsx(
                       "text-sm font-semibold",
-                      s.mono ? "font-mono text-[#003580]" : "text-slate-800",
+                      s.mono ? "font-mono text-brand-500" : "text-slate-800",
                       s.warn ? "text-amber-600" : ""
                     )}>
                       {s.value}
@@ -448,12 +483,12 @@ export default function VehicleDetailPage() {
               </div>
 
               {vehicle.notes && (
-                <div className="mt-4 bg-slate-50 border border-[#E7E7E7] rounded-lg px-4 py-3 text-sm text-slate-500 italic">
+                <div className="mt-4 bg-slate-50 border border-ink-150 rounded-lg px-4 py-3 text-sm text-slate-500 italic">
                   {vehicle.notes}
                 </div>
               )}
 
-              <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-[#E7E7E7]">
+              <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-ink-150">
                 <button
                   onClick={() => { setEditingVehicle({ ...vehicle }); setEditErrors({}); setShowEditModal(true); }}
                   className="btn-secondary text-sm"
@@ -485,10 +520,10 @@ export default function VehicleDetailPage() {
           {[
             { label: "Ukupno troškova", value: `${(totalExpenses * 1.9583).toLocaleString("hr-HR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KM`, color: "text-red-600" },
             { label: "Broj stavki troškova", value: String(expenses.length), color: "text-slate-800" },
-            { label: "Ukupno najma", value: String(rentals.length), color: "text-[#003580]" },
+            { label: "Ukupno najma", value: String(rentals.length), color: "text-brand-500" },
             { label: "Prihod od najma", value: `${(rentals.reduce((s, r) => s + (isFinite(Number(r.total_amount)) ? Number(r.total_amount) : 0), 0) * 1.9583).toLocaleString("hr-HR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KM`, color: "text-emerald-600" },
           ].map((s) => (
-            <div key={s.label} className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-4">
+            <div key={s.label} className="bg-white border border-ink-150 rounded-xl shadow-sm p-4">
               <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">{s.label}</div>
               <div className={clsx("text-xl font-bold", s.color)}>{s.value}</div>
             </div>
@@ -496,9 +531,9 @@ export default function VehicleDetailPage() {
         </div>
 
         {/* ── Tabs ── */}
-        <div className="bg-white border border-[#E7E7E7] rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-ink-150 rounded-2xl shadow-sm overflow-hidden">
           {/* Tab bar */}
-          <div className="flex items-center justify-between px-5 border-b border-[#E7E7E7]">
+          <div className="flex items-center justify-between px-5 border-b border-ink-150">
             <div className="flex gap-1">
               {(["expenses", "rentals"] as const).map((tab) => (
                 <button
@@ -507,7 +542,7 @@ export default function VehicleDetailPage() {
                   className={clsx(
                     "px-4 py-3.5 text-sm font-semibold transition-all border-b-2 -mb-px",
                     activeTab === tab
-                      ? "text-[#003580] border-[#003580]"
+                      ? "text-brand-500 border-[#003580]"
                       : "text-slate-400 border-transparent hover:text-slate-700"
                   )}
                 >
@@ -542,7 +577,7 @@ export default function VehicleDetailPage() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
-                    <thead className="bg-slate-50 border-b border-[#E7E7E7]">
+                    <thead className="bg-slate-50 border-b border-ink-150">
                       <tr>
                         {["Datum", "Tip", "Opis", "Dobavljač", "Iznos"].map((h) => (
                           <th key={h} className="px-5 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
@@ -579,7 +614,7 @@ export default function VehicleDetailPage() {
                               {e.image_url && (
                                 <button
                                   onClick={() => openReceipt(e.image_url)}
-                                  className="text-[#003580] hover:text-[#002660] p-1 rounded hover:bg-blue-50 transition-colors"
+                                  className="text-brand-500 hover:text-[#002660] p-1 rounded hover:bg-blue-50 transition-colors"
                                   title="Prikaži račun"
                                 >
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -593,7 +628,7 @@ export default function VehicleDetailPage() {
                       ))}
                     </tbody>
                   </table>
-                  <div className="px-5 py-3 bg-slate-50 border-t border-[#E7E7E7] flex items-center justify-between rounded-b-2xl">
+                  <div className="px-5 py-3 bg-slate-50 border-t border-ink-150 flex items-center justify-between rounded-b-2xl">
                     <span className="text-xs text-slate-500">{expenses.length} stavki</span>
                     <span className="text-sm font-bold text-slate-800">
                       Ukupno: {(totalExpenses * 1.9583).toLocaleString("hr-HR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} KM
@@ -617,7 +652,7 @@ export default function VehicleDetailPage() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
-                    <thead className="bg-slate-50 border-b border-[#E7E7E7]">
+                    <thead className="bg-slate-50 border-b border-ink-150">
                       <tr>
                         {["Klijent", "Od", "Do", "Ukupno", "Status"].map((h) => (
                           <th key={h} className="px-5 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
@@ -645,7 +680,7 @@ export default function VehicleDetailPage() {
                       ))}
                     </tbody>
                   </table>
-                  <div className="px-5 py-3 bg-slate-50 border-t border-[#E7E7E7] rounded-b-2xl">
+                  <div className="px-5 py-3 bg-slate-50 border-t border-ink-150 rounded-b-2xl">
                     <span className="text-xs text-slate-500">{rentals.length} najma</span>
                   </div>
                 </div>
@@ -658,7 +693,7 @@ export default function VehicleDetailPage() {
       {/* ── Edit vehicle modal ── */}
       {showEditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl border border-[#E7E7E7] shadow-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl border border-ink-150 shadow-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-slate-800">Uredi vozilo</h2>
               <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
@@ -691,7 +726,7 @@ export default function VehicleDetailPage() {
                       "w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all",
                       editErrors[f.key]
                         ? "border-red-300 focus:ring-red-200 focus:border-red-400"
-                        : "border-slate-200 focus:ring-[#003580]/20 focus:border-[#003580]"
+                        : "border-slate-200 focus:ring-brand-500/20 focus:border-brand-500"
                     )}
                     value={(editingVehicle as any)[f.key] ?? ""}
                     onChange={(e) => setEditField(f.key as keyof Vehicle, f.type === "number" ? Number(e.target.value) : e.target.value)}
@@ -704,7 +739,7 @@ export default function VehicleDetailPage() {
               <div>
                 <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Status</label>
                 <select
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580] transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
                   value={editingVehicle.status ?? "free"}
                   onChange={(e) => setEditField("status", e.target.value)}
                 >
@@ -753,13 +788,13 @@ export default function VehicleDetailPage() {
                     className={clsx(
                       "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all active:scale-95",
                       editingVehicle.model_3d === m.key
-                        ? "border-[#003580]/60 bg-[#003580]/5 ring-2 ring-[#003580]/20"
+                        ? "border-[#003580]/60 bg-brand-500/5 ring-2 ring-[#003580]/20"
                         : "border-slate-200 bg-white hover:border-[#003580]/30"
                     )}
                   >
                     <div className={clsx(
                       "w-9 h-9 rounded-full flex items-center justify-center",
-                      editingVehicle.model_3d === m.key ? "bg-[#003580]" : "bg-slate-100"
+                      editingVehicle.model_3d === m.key ? "bg-brand-500" : "bg-slate-100"
                     )}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke={editingVehicle.model_3d === m.key ? "white" : "#64748b"}
@@ -780,7 +815,7 @@ export default function VehicleDetailPage() {
             <div className="mt-4">
               <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Napomene</label>
               <textarea
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580] transition-all min-h-[70px] resize-none"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all min-h-[70px] resize-none"
                 value={editingVehicle.notes ?? ""}
                 onChange={(e) => setEditField("notes", e.target.value)}
               />
@@ -817,7 +852,7 @@ export default function VehicleDetailPage() {
       {/* ── Delete confirmation modal ── */}
       {showDeleteConfirm && vehicle && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl border border-[#E7E7E7] shadow-2xl w-full max-w-md p-6 animate-slide-up">
+          <div className="bg-white rounded-2xl border border-ink-150 shadow-2xl w-full max-w-md p-6 animate-slide-up">
             <div className="flex items-start gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -830,7 +865,7 @@ export default function VehicleDetailPage() {
                 <h2 className="text-lg font-bold text-slate-800">Obrisati vozilo?</h2>
                 <p className="text-sm text-slate-500 mt-1">
                   <span className="font-semibold text-slate-700">{vehicle.make} {vehicle.model}</span>
-                  <span className="ml-1 font-mono text-[#003580]">({vehicle.registration})</span>
+                  <span className="ml-1 font-mono text-brand-500">({vehicle.registration})</span>
                 </p>
               </div>
             </div>
@@ -870,7 +905,7 @@ export default function VehicleDetailPage() {
       {/* ── Add expense modal ── */}
       {showExpenseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl border border-[#E7E7E7] shadow-2xl w-full max-w-md max-h-[92vh] flex flex-col">
+          <div className="bg-white rounded-2xl border border-ink-150 shadow-2xl w-full max-w-md max-h-[92vh] flex flex-col">
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100 flex-shrink-0">
               <h2 className="text-lg font-bold text-slate-800">Novi trošak</h2>
               <button onClick={() => setShowExpenseModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
@@ -996,7 +1031,7 @@ export default function VehicleDetailPage() {
                   <button
                     type="button"
                     onClick={() => setSplitMonths(v => v <= 1 ? 2 : 1)}
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${splitMonths > 1 ? "bg-[#003580]" : "bg-slate-300"}`}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${splitMonths > 1 ? "bg-brand-500" : "bg-slate-300"}`}
                   >
                     <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${splitMonths > 1 ? "translate-x-4" : "translate-x-0.5"}`} />
                   </button>
@@ -1015,12 +1050,12 @@ export default function VehicleDetailPage() {
                           setSplitMonths(isNaN(n) ? 0 : n);
                         }}
                         onBlur={() => { if (splitMonths < 2) setSplitMonths(2); }}
-                        className="w-16 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]"
+                        className="w-16 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                       />
                     </div>
                     {splitMonths >= 2 && (
                       <div className="text-xs text-slate-500">
-                        = <span className="font-semibold text-[#003580]">{(newExpense.amount / splitMonths * 1.9583).toFixed(2)} KM</span> / mjesec
+                        = <span className="font-semibold text-brand-500">{(newExpense.amount / splitMonths * 1.9583).toFixed(2)} KM</span> / mjesec
                       </div>
                     )}
                   </div>
@@ -1054,7 +1089,7 @@ export default function VehicleDetailPage() {
       {showDamageModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[95vh]">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E7E7E7] flex-shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-ink-150 flex-shrink-0">
               <div>
                 <h2 className="text-lg font-bold text-slate-800">Stanje vozila</h2>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -1076,7 +1111,7 @@ export default function VehicleDetailPage() {
                 vehicleModel3d={vehicle.model_3d}
               />
             </div>
-            <div className="flex gap-3 justify-end px-6 py-4 border-t border-[#E7E7E7] flex-shrink-0">
+            <div className="flex gap-3 justify-end px-6 py-4 border-t border-ink-150 flex-shrink-0">
               <button onClick={() => setShowDamageModal(false)} className="btn-secondary">Odustani</button>
               <button onClick={saveDamages} disabled={savingDamages} className="btn-primary">
                 {savingDamages ? "Čuvanje..." : "Spremi stanje"}

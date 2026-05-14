@@ -44,3 +44,8 @@ volkswagen_van_t6/
 *.pdf
 *.zip
 *.tar.gz
+
+# ── Agent / design-handoff scratch (local-only, not for deploy) ──
+.codex/
+PROJECT_STATE.md
+VTZclaudedesignredesign/

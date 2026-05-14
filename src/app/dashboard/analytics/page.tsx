@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import clsx from "clsx";
+import { Skeleton, SkeletonStatCard } from "@/components/ui/Skeleton";
 import {
   BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -131,7 +132,7 @@ function TrendBadge({ current, prev, comparisonLabel }: { current: number; prev:
         tabIndex={0}
         aria-label={description}
         className={clsx(
-          "inline-flex cursor-help items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-bold outline-none focus:ring-2 focus:ring-[#003580]/20",
+          "inline-flex cursor-help items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-bold outline-none focus:ring-2 focus:ring-brand-500/20",
           up ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"
         )}
       >
@@ -391,19 +392,32 @@ export default function AnalyticsPage() {
     : 0;
 
   if (role !== "admin") {
-    return <div className="min-h-screen flex items-center justify-center bg-[#F7F9FC]"><p className="text-slate-400 text-sm">Učitavanje...</p></div>;
+    return (
+      <div className="min-h-screen bg-ink-50" aria-busy="true" aria-label="Učitavanje analitike">
+        <div className="p-4 sm:p-6 max-w-[1440px] mx-auto space-y-5">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-7 w-32" />
+            <Skeleton className="h-4 w-16" rounded="md" />
+          </div>
+          <Skeleton className="h-4 w-64" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC]">
+    <div className="min-h-screen bg-ink-50">
       <div className="p-4 sm:p-6 max-w-[1440px] mx-auto space-y-5">
 
         {/* ── Header ── */}
         <div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-[#003580] tracking-tight">Analitika</h1>
-              <span className="text-[10px] font-bold bg-[#003580]/10 text-[#003580] px-2 py-0.5 rounded uppercase tracking-wide">CEO View</span>
+              <h1 className="text-2xl font-bold text-brand-500 tracking-tight">Analitika</h1>
+              <span className="text-[10px] font-bold bg-brand-500/10 text-brand-500 px-2 py-0.5 rounded uppercase tracking-wide">CEO View</span>
             </div>
             <p className="text-sm text-slate-500 mt-0.5">Prihod · Troškovi · Profit · Upozorenja</p>
           </div>
@@ -431,7 +445,7 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
 
           {/* Utilization */}
-          <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-4 col-span-1">
+          <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-4 col-span-1">
             <div className="flex items-center gap-1.5 mb-2">
               <HealthDot level={utilizationHealth} />
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Iskorištenost</span>
@@ -446,17 +460,17 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Active rentals */}
-          <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-4">
+          <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-4">
             <div className="flex items-center gap-1.5 mb-2">
               <HealthDot level="green" />
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Aktivni najam</span>
             </div>
-            <div className="text-2xl font-black text-[#003580] leading-none">{filteredRentals.length}</div>
+            <div className="text-2xl font-black text-brand-500 leading-none">{filteredRentals.length}</div>
             <p className="text-[10px] text-slate-400 mt-2">u odabranom periodu</p>
           </div>
 
           {/* Revenue */}
-          <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-4">
+          <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-4">
             <div className="flex items-center gap-1.5 mb-2">
               <HealthDot level="green" />
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Prihod</span>
@@ -469,7 +483,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Costs */}
-          <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-4">
+          <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-4">
             <div className="flex items-center gap-1.5 mb-2">
               <HealthDot level="amber" />
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Troškovi</span>
@@ -479,7 +493,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Net Profit */}
-          <div className={clsx("border rounded-xl shadow-sm p-4", netProfit >= 0 ? "bg-[#003580] border-[#002660]" : "bg-red-600 border-red-700")}>
+          <div className={clsx("border rounded-xl shadow-sm p-4", netProfit >= 0 ? "bg-brand-500 border-[#002660]" : "bg-red-600 border-red-700")}>
             <div className="flex items-center gap-1.5 mb-2">
               <span className="w-2.5 h-2.5 rounded-full bg-white/40 flex-shrink-0" />
               <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">Neto profit</span>
@@ -489,7 +503,7 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Alerts */}
-          <div className={clsx("border rounded-xl shadow-sm p-4", alertHealth === "green" ? "bg-white border-[#E7E7E7]" : alertHealth === "amber" ? "bg-amber-50 border-amber-200" : "bg-red-50 border-red-200")}>
+          <div className={clsx("border rounded-xl shadow-sm p-4", alertHealth === "green" ? "bg-white border-ink-150" : alertHealth === "amber" ? "bg-amber-50 border-amber-200" : "bg-red-50 border-red-200")}>
             <div className="flex items-center gap-1.5 mb-2">
               <HealthDot level={alertHealth} />
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Upozorenja</span>
@@ -502,7 +516,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* ── Filters ── */}
-        <div className="flex flex-wrap items-center gap-3 bg-white border border-[#E7E7E7] rounded-xl shadow-sm px-4 py-3 text-sm">
+        <div className="flex flex-wrap items-center gap-3 bg-white border border-ink-150 rounded-xl shadow-sm px-4 py-3 text-sm">
           <div className="flex flex-wrap items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
             {(Object.keys(PERIOD_LABELS) as Period[]).map(p => (
               <button
@@ -511,7 +525,7 @@ export default function AnalyticsPage() {
                 className={clsx(
                   "px-3 py-1.5 rounded-md text-xs font-semibold transition-all whitespace-nowrap",
                   !customPeriodActive && period === p
-                    ? "bg-[#003580] text-white shadow-sm"
+                    ? "bg-brand-500 text-white shadow-sm"
                     : "text-slate-500 hover:text-slate-800 hover:bg-white"
                 )}
               >
@@ -532,7 +546,7 @@ export default function AnalyticsPage() {
                   setCustomFrom(next);
                   if (!next || (customTo && customTo < next)) setCustomTo("");
                 }}
-                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]"
+                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
             </label>
             <label className="flex items-center gap-1.5">
@@ -544,7 +558,7 @@ export default function AnalyticsPage() {
                 disabled={!customFrom}
                 onChange={e => setCustomTo(e.target.value)}
                 className={clsx(
-                  "bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]",
+                  "bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500",
                   !customFrom && "cursor-not-allowed opacity-50"
                 )}
               />
@@ -553,7 +567,7 @@ export default function AnalyticsPage() {
 
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Trošak:</span>
-            <select value={category} onChange={e => setCategory(e.target.value as CategoryFilter)} className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]">
+            <select value={category} onChange={e => setCategory(e.target.value as CategoryFilter)} className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
               <option value="all">Sve kategorije</option>
               {Object.entries(CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
@@ -561,7 +575,7 @@ export default function AnalyticsPage() {
 
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Vozilo:</span>
-            <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]">
+            <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
               <option value="all">Sva vozila</option>
               {vehicles.map(v => <option key={v.id} value={v.id}>{v.make} {v.model} ({v.registration})</option>)}
             </select>
@@ -569,7 +583,7 @@ export default function AnalyticsPage() {
 
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-3 lg:ml-auto">
-              <button onClick={resetFilters} className="text-xs font-semibold text-slate-400 hover:text-[#003580]">
+              <button onClick={resetFilters} className="text-xs font-semibold text-slate-400 hover:text-brand-500">
                 ✕ Resetuj filtere
               </button>
             </div>
@@ -577,11 +591,29 @@ export default function AnalyticsPage() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-slate-400 text-sm">Učitavanje podataka...</div>
+          <div className="space-y-5" aria-busy="true" aria-label="Učitavanje podataka">
+            <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-7 w-32" rounded="lg" />
+              </div>
+              <Skeleton className="h-64 w-full" rounded="lg" />
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5 space-y-4">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-52 w-full" rounded="lg" />
+              </div>
+              <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5 space-y-4">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-52 w-full" rounded="lg" />
+              </div>
+            </div>
+          </div>
         ) : (
           <>
             {/* ── Monthly Revenue bar chart (Riderly-style) ── */}
-            <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5">
+            <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5">
               <div className="flex items-start sm:items-center justify-between gap-3 mb-5">
                 <div>
                   <h2 className="text-base font-semibold text-slate-800">Mjesečni prihod {new Date().getFullYear()}</h2>
@@ -593,7 +625,7 @@ export default function AnalyticsPage() {
                     onClick={() => setShowCosts(v => !v)}
                     className={clsx(
                       "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none",
-                      showCosts ? "bg-[#003580]" : "bg-slate-200"
+                      showCosts ? "bg-brand-500" : "bg-slate-200"
                     )}
                   >
                     <span className={clsx(
@@ -623,7 +655,7 @@ export default function AnalyticsPage() {
               </div>
               <div className="flex items-center gap-5 mt-3 text-[11px] text-slate-500">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-sm bg-[#003580]" />
+                  <span className="w-3 h-3 rounded-sm bg-brand-500" />
                   Prihod
                 </span>
                 {showCosts && (
@@ -639,7 +671,7 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
               {/* Day-of-week utilization */}
-              <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5">
+              <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5">
                 <div className="mb-4">
                   <h2 className="text-base font-semibold text-slate-800">Zauzeto po danu u tjednu</h2>
                   <p className="text-xs text-slate-400 mt-0.5">Broj rezervacija po danu — identificira "mrtve zone"</p>
@@ -662,14 +694,14 @@ export default function AnalyticsPage() {
                   </div>
                 )}
                 <div className="flex items-center gap-4 mt-3 text-[11px] text-slate-500">
-                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#003580]" /> Visoka popunjenost</span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-brand-500" /> Visoka popunjenost</span>
                   <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#60a5fa]" /> Srednja</span>
                   <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-[#bfdbfe]" /> Niska</span>
                 </div>
               </div>
 
               {/* Cost breakdown pie */}
-              <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5">
+              <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5">
                 <div className="mb-4">
                   <h2 className="text-base font-semibold text-slate-800">Struktura troškova</h2>
                   <p className="text-xs text-slate-400 mt-0.5">Klikni kategoriju ili legendu za detalje</p>
@@ -722,7 +754,7 @@ export default function AnalyticsPage() {
               </div>
 
               {vehicleId === "all" && (
-                <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5">
+                <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5">
                   <div className="mb-4">
                     <h2 className="text-base font-semibold text-slate-800">Struktura prihoda po vozilu</h2>
                     <p className="text-xs text-slate-400 mt-0.5">Klikni vozilo ili legendu za prikaz najma</p>
@@ -778,7 +810,7 @@ export default function AnalyticsPage() {
 
             {/* ── Cost per KM ── */}
             {costPerKmData.length > 0 && (
-              <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5">
+              <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5">
                 <div className="mb-4">
                   <h2 className="text-base font-semibold text-slate-800">Trošak po kilometru</h2>
                   <p className="text-xs text-slate-400 mt-0.5">Period troškovi ÷ ukupni km — otkriva skuplja vozila za eksploataciju</p>
@@ -798,13 +830,13 @@ export default function AnalyticsPage() {
             )}
 
             {/* ── Per-vehicle profitability table ── */}
-            <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-[#E7E7E7] flex items-center justify-between flex-wrap gap-3">
+            <div className="bg-white border border-ink-150 rounded-xl shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-ink-150 flex items-center justify-between flex-wrap gap-3">
                 <div>
                   <h2 className="text-base font-semibold text-slate-800">Profitabilnost po vozilu</h2>
                   <p className="text-xs text-slate-400 mt-0.5">Klikni vozilo za detalje · Breakeven = životni prihod vs. nabavna cijena</p>
                 </div>
-                <select value={sortBy} onChange={e => setSortBy(e.target.value as "profit" | "revenue" | "costs")} className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]">
+                <select value={sortBy} onChange={e => setSortBy(e.target.value as "profit" | "revenue" | "costs")} className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
                   <option value="profit">Sortiraj po profitu</option>
                   <option value="revenue">Sortiraj po prihodu</option>
                   <option value="costs">Sortiraj po troškovima</option>
@@ -812,7 +844,7 @@ export default function AnalyticsPage() {
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead className="bg-slate-50 border-b border-[#E7E7E7]">
+                  <thead className="bg-slate-50 border-b border-ink-150">
                     <tr>
                       {["Vozilo", "Status", "# Najma", "Prihod", "Troškovi", "Profit", "Marža", "Breakeven"].map(h => (
                         <th key={h} className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
@@ -826,7 +858,7 @@ export default function AnalyticsPage() {
                         <tr key={v.id} onClick={() => router.push(`/dashboard/fleet/${v.id}`)} className="hover:bg-slate-50 transition-colors cursor-pointer">
                           <td className="px-4 py-3.5">
                             <div className="text-sm font-semibold text-slate-800">{v.name}</div>
-                            <div className="text-xs font-mono text-[#003580] font-bold">{v.registration}</div>
+                            <div className="text-xs font-mono text-brand-500 font-bold">{v.registration}</div>
                           </td>
                           <td className="px-4 py-3.5">
                             <span className={clsx("text-[10px] font-bold px-2 py-0.5 rounded-full uppercase whitespace-nowrap", {
@@ -842,7 +874,7 @@ export default function AnalyticsPage() {
                           <td className="px-4 py-3.5 text-sm text-slate-600 text-center">{v.rentalCount}</td>
                           <td className="px-4 py-3.5 text-sm font-semibold text-emerald-600 whitespace-nowrap">{fmtFull(v.revenue)}</td>
                           <td className="px-4 py-3.5 text-sm font-semibold text-red-500 whitespace-nowrap">{fmtFull(v.costs)}</td>
-                          <td className={clsx("px-4 py-3.5 text-sm font-black whitespace-nowrap", v.profit >= 0 ? "text-[#003580]" : "text-red-600")}>{fmtFull(v.profit)}</td>
+                          <td className={clsx("px-4 py-3.5 text-sm font-black whitespace-nowrap", v.profit >= 0 ? "text-brand-500" : "text-red-600")}>{fmtFull(v.profit)}</td>
                           <td className="px-4 py-3.5 min-w-[100px]">
                             <div className="flex items-center gap-2">
                               <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -875,12 +907,12 @@ export default function AnalyticsPage() {
                     })}
                   </tbody>
                 </table>
-                <div className="px-5 py-3 bg-slate-50 border-t border-[#E7E7E7] flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                <div className="px-5 py-3 bg-slate-50 border-t border-ink-150 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
                   <span>{vehicleStats.length} vozila</span>
                   <div className="flex flex-wrap gap-4">
                     <span>Prihod: <span className="font-bold text-emerald-600">{fmt(totalRevenue)}</span></span>
                     <span>Troškovi: <span className="font-bold text-red-500">{fmt(totalCosts)}</span></span>
-                    <span>Neto: <span className={clsx("font-bold", netProfit >= 0 ? "text-[#003580]" : "text-red-600")}>{fmt(netProfit)}</span></span>
+                    <span>Neto: <span className={clsx("font-bold", netProfit >= 0 ? "text-brand-500" : "text-red-600")}>{fmt(netProfit)}</span></span>
                   </div>
                 </div>
               </div>
@@ -891,7 +923,7 @@ export default function AnalyticsPage() {
 
       {drillModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white border border-[#E7E7E7] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-slide-up">
+          <div className="bg-white border border-ink-150 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-slide-up">
             <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 rounded-t-2xl">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -914,9 +946,9 @@ export default function AnalyticsPage() {
               {drillModal.rows.length === 0 ? (
                 <div className="py-14 text-center text-sm text-slate-400">Nema zapisa za odabrani segment</div>
               ) : (
-                <div className="overflow-x-auto border border-[#E7E7E7] rounded-xl">
+                <div className="overflow-x-auto border border-ink-150 rounded-xl">
                   <table className="w-full min-w-[680px] text-left">
-                    <thead className="bg-slate-50 border-b border-[#E7E7E7]">
+                    <thead className="bg-slate-50 border-b border-ink-150">
                       <tr>
                         {(drillModal.kind === "expenses"
                           ? ["Datum", "Vozilo", "Kategorija", "Iznos"]

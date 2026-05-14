@@ -27,7 +27,7 @@ function StatCard({
   barSub?: string;
 }) {
   return (
-    <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5">
+    <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5">
       <div className="flex items-center justify-between mb-3">
         <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</span>
         <span className={iconColor}>{icon}</span>
@@ -38,7 +38,7 @@ function StatCard({
       </div>
       {bar && (
         <div className="w-full bg-slate-100 h-1.5 rounded-full mt-3 overflow-hidden">
-          <div className="bg-[#003580] h-full rounded-full" style={{ width: `${barValue}%` }} />
+          <div className="bg-brand-500 h-full rounded-full" style={{ width: `${barValue}%` }} />
         </div>
       )}
       {barSub && <p className="text-[11px] text-slate-400 mt-2">{barSub}</p>}
@@ -166,12 +166,12 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC]">
+    <div className="min-h-screen bg-ink-50">
       <div className="p-4 sm:p-6 max-w-[1440px] mx-auto space-y-4 sm:space-y-6">
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-[#003580] tracking-tight">Operativni pregled</h1>
+          <h1 className="text-2xl font-bold text-brand-500 tracking-tight">Operativni pregled</h1>
           <p className="text-sm text-slate-500 mt-0.5 capitalize">{dateLabel}</p>
         </div>
 
@@ -181,7 +181,7 @@ export default async function DashboardPage() {
             label="Iskorištenost flote"
             value={`${utilRate}%`}
             sub={rentedCount > 0 ? `${rentedCount} u najmu` : undefined}
-            iconColor="text-[#003580]"
+            iconColor="text-brand-500"
             bar
             barValue={utilRate}
             barSub="Trenutna popunjenost"
@@ -234,9 +234,9 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Arrivals & Departures table (2/3) */}
-          <div className="lg:col-span-2 bg-white border border-[#E7E7E7] rounded-xl shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#E7E7E7] flex items-center justify-between">
-              <h2 className="text-base font-semibold text-[#003580]">Odlasci &amp; Dolasci danas</h2>
+          <div className="lg:col-span-2 bg-white border border-ink-150 rounded-xl shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-ink-150 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-brand-500">Odlasci &amp; Dolasci danas</h2>
               <span className="text-xs text-slate-500 font-medium">
                 {checkouts.length + checkins.length} transakcija
               </span>
@@ -249,7 +249,7 @@ export default async function DashboardPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
-                  <thead className="bg-slate-50 border-b border-[#E7E7E7]">
+                  <thead className="bg-slate-50 border-b border-ink-150">
                     <tr>
                       {["Tip", "Vozilo", "Klijent", "Status"].map((h) => (
                         <th key={h} className="px-4 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{h}</th>
@@ -260,14 +260,14 @@ export default async function DashboardPage() {
                     {checkouts.map((r: any) => (
                       <tr key={r.id + "-out"} className="hover:bg-slate-50 transition-colors">
                         <td className="px-4 py-3">
-                          <span className="flex items-center gap-1 text-[11px] font-bold text-[#003580]">
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-brand-500">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
                             ODLAZAK
                           </span>
                         </td>
                         <td className="px-4 py-3">
                           <p className="text-sm font-semibold text-slate-800">{r.vehicles?.make} {r.vehicles?.model}</p>
-                          <p className="text-xs font-mono text-[#003580] font-semibold">{r.vehicles?.registration}</p>
+                          <p className="text-xs font-mono text-brand-500 font-semibold">{r.vehicles?.registration}</p>
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-600">{r.clients?.full_name}</td>
                         <td className="px-4 py-3">
@@ -285,7 +285,7 @@ export default async function DashboardPage() {
                         </td>
                         <td className="px-4 py-3">
                           <p className="text-sm font-semibold text-slate-800">{r.vehicles?.make} {r.vehicles?.model}</p>
-                          <p className="text-xs font-mono text-[#003580] font-semibold">{r.vehicles?.registration}</p>
+                          <p className="text-xs font-mono text-brand-500 font-semibold">{r.vehicles?.registration}</p>
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-600">{r.clients?.full_name}</td>
                         <td className="px-4 py-3">
@@ -304,9 +304,9 @@ export default async function DashboardPage() {
 
             {/* Priority alerts */}
             {(overdueRentals.length > 0 || (expiringRegs?.length ?? 0) > 0) && (
-              <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm overflow-hidden">
-                <div className="px-5 py-4 border-b border-[#E7E7E7] flex items-center justify-between">
-                  <h2 className="text-base font-semibold text-[#003580]">Prioritetna upozorenja</h2>
+              <div className="bg-white border border-ink-150 rounded-xl shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-ink-150 flex items-center justify-between">
+                  <h2 className="text-base font-semibold text-brand-500">Prioritetna upozorenja</h2>
                   <span className="w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                     {overdueRentals.length + (expiringRegs?.length ?? 0)}
                   </span>
@@ -339,11 +339,11 @@ export default async function DashboardPage() {
             <AirportArrivalsCard initialRentals={airportRentals} />
 
             {/* Fleet distribution */}
-            <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5">
-              <h2 className="text-base font-semibold text-[#003580] mb-4">Distribucija flote</h2>
+            <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5">
+              <h2 className="text-base font-semibold text-brand-500 mb-4">Distribucija flote</h2>
               <div className="space-y-3">
                 {[
-                  { label: "U najmu",        count: rentedCount,  dot: "bg-[#003580]" },
+                  { label: "U najmu",        count: rentedCount,  dot: "bg-brand-500" },
                   { label: "Slobodna",       count: freeCount,    dot: "bg-emerald-500" },
                   { label: "Na servisu",     count: serviceCount, dot: "bg-amber-400" },
                   { label: "Pranje/Priprema",count: washCount,    dot: "bg-purple-400" },

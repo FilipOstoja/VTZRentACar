@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import clsx from "clsx";
+import { Skeleton } from "@/components/ui/Skeleton";
 import {
   isFilled,
   isValidEmail,
@@ -173,13 +174,13 @@ export default function ClientsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC]">
+    <div className="min-h-screen bg-ink-50">
       <div className="p-4 sm:p-6 max-w-[1440px] mx-auto space-y-4 sm:space-y-6">
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-[#003580] tracking-tight">Baza klijenata</h1>
+            <h1 className="text-2xl font-bold text-brand-500 tracking-tight">Baza klijenata</h1>
             <p className="text-sm text-slate-500 mt-0.5">{clients.length} klijenata ukupno</p>
           </div>
           <button onClick={openAdd} className="btn-primary self-start sm:self-auto">
@@ -197,13 +198,13 @@ export default function ClientsPage() {
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input
-              className="pl-9 pr-4 py-2 bg-white border border-[#E7E7E7] rounded-lg text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580] transition-all w-full shadow-sm"
+              className="pl-9 pr-4 py-2 bg-white border border-ink-150 rounded-lg text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all w-full shadow-sm"
               placeholder="Pretraži klijente..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer bg-white border border-[#E7E7E7] rounded-lg px-3 py-2 shadow-sm hover:bg-slate-50 transition-colors">
+          <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer bg-white border border-ink-150 rounded-lg px-3 py-2 shadow-sm hover:bg-slate-50 transition-colors">
             <input
               type="checkbox"
               checked={filterBlacklist}
@@ -215,14 +216,35 @@ export default function ClientsPage() {
         </div>
 
         {/* Table */}
-        <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-ink-150 rounded-xl shadow-sm overflow-hidden">
           {loading ? (
-            <div className="flex items-center justify-center py-16 text-slate-400 text-sm">Učitavanje...</div>
+            <table className="w-full" aria-busy="true" aria-label="Učitavanje klijenata">
+              <thead className="bg-slate-50 border-b border-ink-150">
+                <tr>
+                  {["Ime / Kompanija", "Tip", "Telefon", "Email", "Grad", "Status", ""].map((h) => (
+                    <th key={h} className="table-header">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i} className="border-b border-slate-100">
+                    <td className="px-4 py-4"><Skeleton className="h-4 w-40" /></td>
+                    <td className="px-4 py-4"><Skeleton className="h-5 w-16" rounded="full" /></td>
+                    <td className="px-4 py-4"><Skeleton className="h-4 w-24" /></td>
+                    <td className="px-4 py-4"><Skeleton className="h-4 w-36" /></td>
+                    <td className="px-4 py-4"><Skeleton className="h-4 w-20" /></td>
+                    <td className="px-4 py-4"><Skeleton className="h-5 w-16" rounded="full" /></td>
+                    <td className="px-4 py-4"><Skeleton className="h-3 w-12" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : filtered.length === 0 ? (
             <div className="py-16 text-center text-slate-400 text-sm">Nema klijenata</div>
           ) : (
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-[#E7E7E7]">
+              <thead className="bg-slate-50 border-b border-ink-150">
                 <tr>
                   {["Ime / Kompanija", "Tip", "Telefon", "Email", "Grad", "Status", ""].map((h) => (
                     <th key={h} className="table-header">{h}</th>
@@ -279,7 +301,7 @@ export default function ClientsPage() {
               </tbody>
             </table>
           )}
-          <div className="px-5 py-3 bg-slate-50 border-t border-[#E7E7E7]">
+          <div className="px-5 py-3 bg-slate-50 border-t border-ink-150">
             <span className="text-xs text-slate-500">Prikazano {filtered.length} od {clients.length} klijenata</span>
           </div>
         </div>
@@ -288,7 +310,7 @@ export default function ClientsPage() {
       {/* Client details modal */}
       {detailClient && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white border border-[#E7E7E7] rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto animate-slide-up">
+          <div className="bg-white border border-ink-150 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto animate-slide-up">
             <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-6 py-4 rounded-t-2xl">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div>
@@ -354,15 +376,15 @@ export default function ClientsPage() {
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="rounded-xl border border-[#E7E7E7] p-4">
+                <div className="rounded-xl border border-ink-150 p-4">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ukupno najma</p>
-                  <p className="text-2xl font-black text-[#003580] mt-1">{clientRentals.length}</p>
+                  <p className="text-2xl font-black text-brand-500 mt-1">{clientRentals.length}</p>
                 </div>
-                <div className="rounded-xl border border-[#E7E7E7] p-4">
+                <div className="rounded-xl border border-ink-150 p-4">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ukupan prihod</p>
                   <p className="text-2xl font-black text-emerald-600 mt-1">{money(totalClientRevenue)}</p>
                 </div>
-                <div className="rounded-xl border border-[#E7E7E7] p-4">
+                <div className="rounded-xl border border-ink-150 p-4">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Najmovi s oštećenjima</p>
                   <p className="text-2xl font-black text-amber-600 mt-1">{clientDamageRentals}</p>
                 </div>
@@ -375,7 +397,7 @@ export default function ClientsPage() {
                     <p className="text-xs text-slate-400 mt-0.5">Prikazano {filteredClientRentals.length} od {clientRentals.length} najma</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <select value={rentalVehicleFilter} onChange={(e) => setRentalVehicleFilter(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]">
+                    <select value={rentalVehicleFilter} onChange={(e) => setRentalVehicleFilter(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
                       <option value="all">Sva vozila</option>
                       {rentalVehicleOptions.map((v) => <option key={v.id} value={v.id}>{v.label}</option>)}
                     </select>
@@ -383,16 +405,16 @@ export default function ClientsPage() {
                       type="date"
                       value={rentalDateFrom}
                       onChange={(e) => setRentalDateFrom(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]"
+                      className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                     />
                     <input
                       type="date"
                       value={rentalDateTo}
                       min={rentalDateFrom || undefined}
                       onChange={(e) => setRentalDateTo(e.target.value)}
-                      className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]"
+                      className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                     />
-                    <select value={rentalDamageFilter} onChange={(e) => setRentalDamageFilter(e.target.value as DamageFilter)} className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]">
+                    <select value={rentalDamageFilter} onChange={(e) => setRentalDamageFilter(e.target.value as DamageFilter)} className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
                       <option value="all">Sva oštećenja</option>
                       <option value="with_damage">Sa oštećenjem</option>
                       <option value="no_damage">Bez oštećenja</option>
@@ -400,22 +422,31 @@ export default function ClientsPage() {
                       <option value="pickup_damage">Oštećenja pri preuzimanju</option>
                     </select>
                     {hasRentalFilters && (
-                      <button onClick={resetRentalFilters} className="text-xs font-semibold text-slate-400 hover:text-[#003580] px-2 py-1">
+                      <button onClick={resetRentalFilters} className="text-xs font-semibold text-slate-400 hover:text-brand-500 px-2 py-1">
                         ✕ Resetuj
                       </button>
                     )}
                   </div>
                 </div>
 
-                <div className="border border-[#E7E7E7] rounded-xl overflow-hidden">
+                <div className="border border-ink-150 rounded-xl overflow-hidden">
                   {rentalsLoading ? (
-                    <div className="flex items-center justify-center py-14 text-slate-400 text-sm">Učitavanje najmova...</div>
+                    <div className="p-4 space-y-3" aria-busy="true" aria-label="Učitavanje najmova">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-4 w-12" />
+                          <Skeleton className="h-4 w-20 ml-auto" />
+                        </div>
+                      ))}
+                    </div>
                   ) : filteredClientRentals.length === 0 ? (
                     <div className="py-14 text-center text-slate-400 text-sm">Nema najmova za odabrane filtere</div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full min-w-[760px]">
-                        <thead className="bg-slate-50 border-b border-[#E7E7E7]">
+                        <thead className="bg-slate-50 border-b border-ink-150">
                           <tr>
                             {["Vozilo", "Period", "Dana", "Iznos", "Oštećenja", "Status"].map((h) => (
                               <th key={h} className="table-header">{h}</th>
@@ -473,7 +504,7 @@ export default function ClientsPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white border border-[#E7E7E7] rounded-2xl shadow-2xl w-full max-w-xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
+          <div className="bg-white border border-ink-150 rounded-2xl shadow-2xl w-full max-w-xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-slate-800">
                 {isEditing ? "Uredi klijenta" : "Novi klijent"}
@@ -497,7 +528,7 @@ export default function ClientsPage() {
                       className={clsx(
                         "flex-1 py-2 rounded-lg text-sm font-semibold border transition-all",
                         editingClient.client_type === t
-                          ? "bg-[#003580]/10 border-[#003580]/30 text-[#003580]"
+                          ? "bg-brand-500/10 border-[#003580]/30 text-brand-500"
                           : "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300"
                       )}
                     >

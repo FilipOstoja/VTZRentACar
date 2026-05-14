@@ -57,18 +57,18 @@ export default function TestContractPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC] flex items-center justify-center p-8">
-      <div className="bg-white border border-[#E7E7E7] rounded-2xl shadow-sm max-w-xl w-full p-8 space-y-6">
+    <div className="min-h-screen bg-ink-50 flex items-center justify-center p-8">
+      <div className="bg-white border border-ink-150 rounded-2xl shadow-sm max-w-xl w-full p-8 space-y-6">
 
         <div>
-          <h1 className="text-xl font-bold text-[#003580]">Test — Ugovor o najmu (PDF)</h1>
+          <h1 className="text-xl font-bold text-brand-500">Test — Ugovor o najmu (PDF)</h1>
           <p className="text-sm text-slate-500 mt-1">
             Prikazuje kako će izgledati ugovor koji se automatski generiše pri kreiranju najma.
           </p>
         </div>
 
         {/* Preview of the data that will be in the contract */}
-        <div className="bg-slate-50 border border-[#E7E7E7] rounded-xl p-5 space-y-4 text-sm">
+        <div className="bg-slate-50 border border-ink-150 rounded-xl p-5 space-y-4 text-sm">
 
           <div>
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Vozilo</p>
@@ -76,13 +76,13 @@ export default function TestContractPage() {
               <span className="text-slate-500">Model:</span>
               <span className="font-semibold text-slate-800">{SAMPLE.vehicleMake} {SAMPLE.vehicleModel} ({SAMPLE.vehicleYear})</span>
               <span className="text-slate-500">Registracija:</span>
-              <span className="font-semibold font-mono text-[#003580]">{SAMPLE.vehicleRegistration}</span>
+              <span className="font-semibold font-mono text-brand-500">{SAMPLE.vehicleRegistration}</span>
               <span className="text-slate-500">Boja:</span>
               <span className="text-slate-700">{SAMPLE.vehicleColor}</span>
             </div>
           </div>
 
-          <div className="border-t border-[#E7E7E7]" />
+          <div className="border-t border-ink-150" />
 
           <div>
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Klijent</p>
@@ -98,7 +98,7 @@ export default function TestContractPage() {
             </div>
           </div>
 
-          <div className="border-t border-[#E7E7E7]" />
+          <div className="border-t border-ink-150" />
 
           <div>
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Uvjeti najma</p>
@@ -112,11 +112,11 @@ export default function TestContractPage() {
               <span className="text-slate-500">Depozit:</span>
               <span className="text-slate-700">€{SAMPLE.depositAmount}</span>
               <span className="text-slate-500">Ukupno:</span>
-              <span className="text-xl font-bold text-[#003580]">€{SAMPLE.totalAmount}</span>
+              <span className="text-xl font-bold text-brand-500">€{SAMPLE.totalAmount}</span>
             </div>
           </div>
 
-          <div className="border-t border-[#E7E7E7]" />
+          <div className="border-t border-ink-150" />
 
           <div>
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">

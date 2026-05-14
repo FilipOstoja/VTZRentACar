@@ -29,12 +29,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-ink-100 flex items-center justify-center p-4">
       <div className="w-full max-w-sm animate-slide-up">
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#003580] mb-5 shadow-lg shadow-[#003580]/20">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-500 mb-5 shadow-lg shadow-[#003580]/20">
             <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
               <path d="M4 22L6 14H26L28 22H4Z" fill="white" opacity="0.9"/>
               <rect x="7" y="22" width="4" height="3" rx="1.5" fill="white"/>
@@ -42,7 +42,7 @@ export default function LoginPage() {
               <path d="M8 14L10 8H22L24 14" fill="white" opacity="0.6"/>
             </svg>
           </div>
-          <h1 className="text-2xl font-black text-[#003580] tracking-tight leading-tight">
+          <h1 className="text-2xl font-black text-brand-500 tracking-tight leading-tight">
             VTZ Rent-a-Car
           </h1>
           <p className="text-slate-500 text-[13px] font-semibold uppercase tracking-widest mt-1">

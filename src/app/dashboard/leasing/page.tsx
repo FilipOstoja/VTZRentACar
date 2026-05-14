@@ -53,14 +53,14 @@ function ResultRow({
 }) {
   return (
     <div className={`flex items-center justify-between py-2.5 px-3 rounded-lg ${
-      accent   ? "bg-[#003580]/8 border border-[#003580]/15" :
+      accent   ? "bg-brand-500/8 border border-[#003580]/15" :
       highlight ? "bg-slate-50" : ""
     }`}>
       <div>
         <span className={`text-sm ${accent ? "text-slate-800 font-semibold" : "text-slate-500"}`}>{label}</span>
         {sublabel && <div className="text-xs text-slate-400">{sublabel}</div>}
       </div>
-      <span className={`font-mono text-sm font-semibold ${accent ? "text-[#003580] text-base" : "text-slate-800"}`}>
+      <span className={`font-mono text-sm font-semibold ${accent ? "text-brand-500 text-base" : "text-slate-800"}`}>
         {value}
       </span>
     </div>
@@ -69,7 +69,7 @@ function ResultRow({
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 border-b border-[#E7E7E7] pb-2 mb-3">
+    <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 border-b border-ink-150 pb-2 mb-3">
       {children}
     </h3>
   );
@@ -141,13 +141,13 @@ export default function LeasingPage() {
   if (!results) return null;
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC]">
+    <div className="min-h-screen bg-ink-50">
       <div className="p-4 sm:p-6 max-w-[1440px] mx-auto space-y-4 sm:space-y-6">
 
         {/* Header */}
         <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-[#003580] tracking-tight">Leasing Kalkulator</h1>
+            <h1 className="text-2xl font-bold text-brand-500 tracking-tight">Leasing Kalkulator</h1>
             <p className="text-sm text-slate-500 mt-0.5">Dugoročni najam — B2B kalkulator profitabilnosti</p>
           </div>
           <div className="flex items-center gap-2">
@@ -182,7 +182,7 @@ export default function LeasingPage() {
           <div className="xl:col-span-3 space-y-5">
 
             {/* Offer meta */}
-            <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5 space-y-4">
+            <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5 space-y-4">
               <SectionTitle>Detalji ponude</SectionTitle>
               <div>
                 <label className="label">Vozilo (opis)</label>
@@ -197,7 +197,7 @@ export default function LeasingPage() {
                   onChange={(e) => { setClientSearch(e.target.value); setSelectedClient(null); }}
                 />
                 {clients.length > 0 && !selectedClient && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-[#E7E7E7] rounded-xl shadow-xl overflow-hidden">
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-ink-150 rounded-xl shadow-xl overflow-hidden">
                     {clients.map((c) => (
                       <button
                         key={c.id}
@@ -214,7 +214,7 @@ export default function LeasingPage() {
             </div>
 
             {/* Financing */}
-            <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5 space-y-4">
+            <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5 space-y-4">
               <SectionTitle>Finansiranje vozila</SectionTitle>
               <div className="grid grid-cols-2 gap-4">
                 <InputField label="Cijena auta" prefix="€" value={inputs.vehiclePrice} onChange={set("vehiclePrice")} />
@@ -222,7 +222,7 @@ export default function LeasingPage() {
                 <InputField label="Kamata godišnja" sublabel="(%) npr. 0.07 = 7%" value={inputs.annualInterestRate} onChange={set("annualInterestRate")} step="0.001" min={0} />
                 <InputField label="Period" suffix="mj" value={inputs.periodMonths} onChange={set("periodMonths")} min={1} />
               </div>
-              <div className="bg-slate-50 border border-[#E7E7E7] rounded-lg p-3 grid grid-cols-3 gap-3 text-center">
+              <div className="bg-slate-50 border border-ink-150 rounded-lg p-3 grid grid-cols-3 gap-3 text-center">
                 {[
                   { label: "Učešće iznos", value: formatCurrency(results.downPaymentAmount) },
                   { label: "Leasing glavnica", value: formatCurrency(results.leasingPrincipal) },
@@ -237,7 +237,7 @@ export default function LeasingPage() {
             </div>
 
             {/* Costs */}
-            <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5 space-y-4">
+            <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5 space-y-4">
               <SectionTitle>Troškovi (cijeli period najma)</SectionTitle>
               <div className="grid grid-cols-2 gap-4">
                 <InputField label="Kasko (godišnje)" prefix="€" value={inputs.kaskoYearly} onChange={set("kaskoYearly")} />
@@ -251,7 +251,7 @@ export default function LeasingPage() {
             </div>
 
             {/* Margin & VAT */}
-            <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5 space-y-4">
+            <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5 space-y-4">
               <SectionTitle>Marža i PDV</SectionTitle>
               <div className="grid grid-cols-2 gap-4">
                 <InputField label="Marža posto" sublabel="(%) npr. 0.17 = 17%" value={inputs.marginPct} onChange={set("marginPct")} step="0.01" min={0} />
@@ -266,7 +266,7 @@ export default function LeasingPage() {
           {/* ─── Results (2 cols) ─── */}
           <div className="xl:col-span-2 space-y-5">
 
-            <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5 space-y-1">
+            <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5 space-y-1">
               <SectionTitle>Finansiranje</SectionTitle>
               <ResultRow label="Mjesečna rata financiranja" value={formatCurrency(results.monthlyFinancingRate)} highlight />
               <ResultRow label="Ukupno otplata" value={formatCurrency(results.totalRepayment)} />
@@ -274,13 +274,13 @@ export default function LeasingPage() {
               <ResultRow label="Ukupno financiranje auta" value={formatCurrency(results.totalFinancing)} highlight />
             </div>
 
-            <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5 space-y-1">
+            <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5 space-y-1">
               <SectionTitle>Osiguranje (period)</SectionTitle>
               <ResultRow label="Ukupno Kasko" value={formatCurrency(results.totalKasko)} />
               <ResultRow label="Ukupno AO" value={formatCurrency(results.totalAO)} />
             </div>
 
-            <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm p-5 space-y-1">
+            <div className="bg-white border border-ink-150 rounded-xl shadow-sm p-5 space-y-1">
               <SectionTitle>Ukupni troškovi</SectionTitle>
               <ResultRow label="Ukupan trošak" value={formatCurrency(results.totalCost)} highlight />
               <ResultRow label="Mjesečni trošak" value={formatCurrency(results.monthlyCost)} />
@@ -306,9 +306,9 @@ export default function LeasingPage() {
               <ResultRow label="Mogući ukupni profit" value={formatCurrency(results.possibleProfit)} accent />
             </div>
 
-            <div className="bg-slate-50 border border-[#E7E7E7] rounded-xl p-4 text-xs text-slate-500 leading-relaxed">
+            <div className="bg-slate-50 border border-ink-150 rounded-xl p-4 text-xs text-slate-500 leading-relaxed">
               <strong className="text-slate-600 block mb-1">Napomena</strong>
-              Klijent vidi samo <span className="text-[#003580] font-semibold">miesečni najam s PDV ({formatCurrency(results.monthlyRentWithVat)})</span>.
+              Klijent vidi samo <span className="text-brand-500 font-semibold">miesečni najam s PDV ({formatCurrency(results.monthlyRentWithVat)})</span>.
               Interne marže, troškovi i profit su vidljivi samo adminu.
             </div>
           </div>

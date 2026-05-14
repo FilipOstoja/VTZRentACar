@@ -258,19 +258,19 @@ export default function AirportArrivalsCard({ initialRentals }: Props) {
 
   return (
     <>
-      <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#E7E7E7] flex items-center justify-between gap-3">
+      <div className="bg-white border border-ink-150 rounded-xl shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-ink-150 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Plane className="w-4 h-4 text-[#003580]" />
-            <h2 className="text-base font-semibold text-[#003580]">Aerodromska preuzimanja</h2>
-            <span className="w-5 h-5 bg-[#003580] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            <Plane className="w-4 h-4 text-brand-500" />
+            <h2 className="text-base font-semibold text-brand-500">Aerodromska preuzimanja</h2>
+            <span className="w-5 h-5 bg-brand-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
               {initialRentals.length}
             </span>
           </div>
           <button
             onClick={refresh}
             disabled={refreshing}
-            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#003580]/10 text-[#003580] hover:bg-[#003580]/20 transition-colors disabled:opacity-50 flex-shrink-0"
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-brand-500/10 text-brand-500 hover:bg-brand-500/20 transition-colors disabled:opacity-50 flex-shrink-0"
           >
             <RefreshCw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
             {refreshing ? "Osvježava..." : "Osvježi letove"}
@@ -289,7 +289,7 @@ export default function AirportArrivalsCard({ initialRentals }: Props) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                      <span className="font-mono text-sm font-bold text-[#003580]">
+                      <span className="font-mono text-sm font-bold text-brand-500">
                         {rental.flight_number ?? "—"}
                       </span>
                       {isLoading && (
@@ -338,7 +338,7 @@ export default function AirportArrivalsCard({ initialRentals }: Props) {
                   <button
                     type="button"
                     onClick={() => openDetails(rental)}
-                    className="text-[11px] font-semibold text-[#003580] hover:underline flex-shrink-0 mt-0.5"
+                    className="text-[11px] font-semibold text-brand-500 hover:underline flex-shrink-0 mt-0.5"
                   >
                     Detalji →
                   </button>
@@ -419,7 +419,7 @@ function FlightDetailsModal({
         <div className="px-5 py-4 border-b border-slate-200 flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <Plane className="w-5 h-5 text-[#003580]" />
+              <Plane className="w-5 h-5 text-brand-500" />
               <h3 className="text-lg font-bold text-slate-900">Detalji leta</h3>
               {info && (
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${info.badgeColor}`}>
@@ -444,7 +444,7 @@ function FlightDetailsModal({
         <div className="overflow-y-auto p-5 space-y-4">
           <div className="rounded-lg border border-slate-200 p-4">
             <div className="flex items-start gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isCancelled ? "bg-red-50 text-red-600" : "bg-[#003580]/10 text-[#003580]"}`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isCancelled ? "bg-red-50 text-red-600" : "bg-brand-500/10 text-brand-500"}`}>
                 {isCancelled ? <XCircle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
               </div>
               <div className="flex-1 min-w-0">
@@ -459,7 +459,7 @@ function FlightDetailsModal({
                 type="button"
                 onClick={onRefresh}
                 disabled={isLoading}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#003580] text-white text-xs font-semibold hover:bg-[#002a66] disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-xs font-semibold hover:bg-[#002a66] disabled:opacity-60"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
                 Osvježi
@@ -477,7 +477,7 @@ function FlightDetailsModal({
           <div className="grid md:grid-cols-2 gap-4">
             <div className="rounded-lg border border-slate-200 p-4">
               <div className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-3">
-                <CalendarClock className="w-4 h-4 text-[#003580]" />
+                <CalendarClock className="w-4 h-4 text-brand-500" />
                 Informacije o letu
               </div>
               <div className="space-y-3">
@@ -492,7 +492,7 @@ function FlightDetailsModal({
 
             <div className="rounded-lg border border-slate-200 p-4">
               <div className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-3">
-                <Clock3 className="w-4 h-4 text-[#003580]" />
+                <Clock3 className="w-4 h-4 text-brand-500" />
                 Vremena
               </div>
               <div className="space-y-3">
@@ -514,7 +514,7 @@ function FlightDetailsModal({
 
           <div className="rounded-lg border border-slate-200 p-4">
             <div className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-3">
-              <Navigation className="w-4 h-4 text-[#003580]" />
+              <Navigation className="w-4 h-4 text-brand-500" />
               Dostava vozila do aerodroma
             </div>
             <div className="grid sm:grid-cols-3 gap-3">
@@ -542,7 +542,7 @@ function FlightDetailsModal({
                 href={destinationMapsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#003580] text-white text-xs font-semibold hover:bg-[#002a66]"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-brand-500 text-white text-xs font-semibold hover:bg-[#002a66]"
               >
                 Otvori rutu
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -552,7 +552,7 @@ function FlightDetailsModal({
 
           <div className="rounded-lg border border-slate-200 p-4">
             <div className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-3">
-              <User className="w-4 h-4 text-[#003580]" />
+              <User className="w-4 h-4 text-brand-500" />
               Rezervacija
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
@@ -601,7 +601,7 @@ interface RouteMetricProps {
 function RouteMetric({ icon, label, value, href }: RouteMetricProps) {
   const content = (
     <>
-      <span className="w-8 h-8 rounded-lg bg-[#003580]/10 text-[#003580] flex items-center justify-center flex-shrink-0">
+      <span className="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-500 flex items-center justify-center flex-shrink-0">
         {icon}
       </span>
       <span className="min-w-0">

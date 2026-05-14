@@ -114,11 +114,11 @@ export default function Sidebar() {
   const visibleItems = navItems.filter((item) => !item.adminOnly || role === "admin");
 
   const sidebarContent = (
-    <aside className="w-60 bg-[#F5F7FA] flex flex-col h-full">
+    <aside className="w-60 bg-ink-100 flex flex-col h-full">
       {/* Logo + mobile close button */}
       <div className="px-5 pt-5 pb-4 flex items-start justify-between">
         <Link href="/dashboard" className="block hover:opacity-75 transition-opacity">
-          <h1 className="text-lg font-black text-[#003580] leading-tight tracking-tight">VTZ Rent-a-Car</h1>
+          <h1 className="text-lg font-black text-brand-500 leading-tight tracking-tight">VTZ Rent-a-Car</h1>
           <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">
             Fleet Management System
           </p>
@@ -138,7 +138,7 @@ export default function Sidebar() {
       <div className="px-3 mb-4">
         <Link
           href="/dashboard/rentals"
-          className="flex items-center justify-center gap-2 w-full bg-[#003580] hover:bg-[#002660] text-white py-2.5 rounded-lg text-[13px] font-semibold transition-colors shadow-sm active:scale-95"
+          className="flex items-center justify-center gap-2 w-full bg-brand-500 hover:bg-brand-600 text-white py-2.5 rounded-lg text-[13px] font-semibold transition-colors shadow-sm active:scale-95"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
@@ -164,16 +164,16 @@ export default function Sidebar() {
                 className={clsx(
                   "flex items-center gap-3 px-4 py-2.5 rounded-lg text-[13px] font-semibold transition-all duration-150",
                   active
-                    ? "bg-white text-[#003580] border-l-4 border-[#003580] shadow-sm pl-3"
+                    ? "bg-white text-brand-500 border-l-4 border-[#003580] shadow-sm pl-3"
                     : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                 )}
               >
-                <span className={active ? "text-[#003580]" : "text-slate-500"}>
+                <span className={active ? "text-brand-500" : "text-slate-500"}>
                   {item.icon}
                 </span>
                 <span>{item.label}</span>
                 {item.adminOnly && (
-                  <span className="ml-auto text-[10px] font-bold bg-[#003580]/10 text-[#003580] px-1.5 py-0.5 rounded uppercase tracking-wide">
+                  <span className="ml-auto text-[10px] font-bold bg-brand-500/10 text-brand-500 px-1.5 py-0.5 rounded uppercase tracking-wide">
                     Admin
                   </span>
                 )}
@@ -184,7 +184,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom section */}
-      <div className="px-2 pt-3 pb-4 border-t border-[#E7E7E7] space-y-0.5 mt-auto">
+      <div className="px-2 pt-3 pb-4 border-t border-ink-150 space-y-0.5 mt-auto">
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-[13px] font-semibold text-red-500 hover:bg-red-50 transition-all duration-150"
@@ -197,8 +197,8 @@ export default function Sidebar() {
         </button>
 
         {!loading && (
-          <div className="flex items-center gap-3 px-3 py-2.5 mt-1 rounded-lg bg-white border border-[#E7E7E7] shadow-sm">
-            <div className="w-7 h-7 rounded-full bg-[#003580] flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center gap-3 px-3 py-2.5 mt-1 rounded-lg bg-white border border-ink-150 shadow-sm">
+            <div className="w-7 h-7 rounded-full bg-brand-500 flex items-center justify-center flex-shrink-0">
               <span className="text-white text-xs font-bold">
                 {userName?.charAt(0)?.toUpperCase() || "U"}
               </span>
@@ -209,7 +209,7 @@ export default function Sidebar() {
               </div>
               <div className={clsx(
                 "text-[10px] font-bold uppercase tracking-wide",
-                role === "admin" ? "text-[#003580]" : "text-sky-600"
+                role === "admin" ? "text-brand-500" : "text-sky-600"
               )}>
                 {role}
               </div>
@@ -223,7 +223,7 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop sidebar — always visible, in-flow */}
-      <div className="hidden lg:flex w-60 flex-shrink-0 border-r border-[#E7E7E7] sticky top-0 h-screen overflow-y-auto">
+      <div className="hidden lg:flex w-60 flex-shrink-0 border-r border-ink-150 sticky top-0 h-screen overflow-y-auto">
         {sidebarContent}
       </div>
 
@@ -238,7 +238,7 @@ export default function Sidebar() {
       {/* Mobile slide-in drawer */}
       <div
         className={clsx(
-          "lg:hidden fixed top-0 left-0 h-full z-50 shadow-2xl border-r border-[#E7E7E7] transition-transform duration-300 ease-in-out",
+          "lg:hidden fixed top-0 left-0 h-full z-50 shadow-2xl border-r border-ink-150 transition-transform duration-300 ease-in-out",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -247,7 +247,7 @@ export default function Sidebar() {
 
       {/* Mobile hamburger button */}
       <button
-        className="lg:hidden fixed top-3.5 left-4 z-30 w-9 h-9 bg-[#003580] text-white rounded-lg flex items-center justify-center shadow-md active:scale-95 transition-transform"
+        className="lg:hidden fixed top-3.5 left-4 z-30 w-9 h-9 bg-brand-500 text-white rounded-lg flex items-center justify-center shadow-md active:scale-95 transition-transform"
         onClick={() => setMobileOpen(true)}
         aria-label="Otvori meni"
       >

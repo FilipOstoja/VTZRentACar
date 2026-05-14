@@ -6,7 +6,13 @@ import { createClient } from "@/lib/supabase/client";
 import clsx from "clsx";
 import QuickAddRow from "@/components/expenses/QuickAddRow";
 import GlobalExpenseModal from "@/components/expenses/GlobalExpenseModal";
-import { getVehiclePhoto } from "@/lib/vehiclePhoto";
+import { Skeleton } from "@/components/ui/Skeleton";
+import VehiclePhoto from "@/components/VehiclePhoto";
+import VehicleStatusPill from "@/components/fleet/VehicleStatusPill";
+import FleetFiltersSheet, {
+  type FleetFilter,
+  type SortKey,
+} from "@/components/fleet/FleetFiltersSheet";
 import {
   isFilled,
   isValidYear,
@@ -46,7 +52,7 @@ const STATUS_BADGE: Record<string, string> = {
 
 const STATUS_DOT: Record<string, string> = {
   free: "bg-emerald-500",
-  rented: "bg-[#003580]",
+  rented: "bg-brand-500",
   service: "bg-amber-400",
   washing: "bg-purple-400",
   inactive: "bg-slate-300",
@@ -98,7 +104,7 @@ const FieldInput = ({
         "w-full bg-slate-50 border rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all",
         error
           ? "border-red-300 focus:ring-red-200 focus:border-red-400"
-          : "border-slate-200 focus:ring-[#003580]/20 focus:border-[#003580]"
+          : "border-slate-200 focus:ring-brand-500/20 focus:border-brand-500"
       )}
       placeholder={placeholder}
       value={value ?? ""}
@@ -126,9 +132,10 @@ export default function FleetPage() {
   const [editingVehicle, setEditingVehicle] = useState<Partial<Vehicle>>(emptyVehicle);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState<FleetFilter>("all");
   const [search, setSearch] = useState("");
-  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [sort, setSort] = useState<SortKey>("make");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [timelineOffset, setTimelineOffset] = useState(0);
   const [showGlobalExpense, setShowGlobalExpense] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -242,27 +249,20 @@ export default function FleetPage() {
     if (errors[key]) setErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
   };
 
-  const updateStatus = async (vehicleId: string, newStatus: string) => {
-    setUpdatingStatus(vehicleId);
-    await supabase.from("vehicles").update({ status: newStatus }).eq("id", vehicleId);
-    setVehicles((prev) => prev.map((v) => v.id === vehicleId ? { ...v, status: newStatus } : v));
-    setUpdatingStatus(null);
-  };
-
   return (
-    <div className="min-h-screen bg-[#F7F9FC]">
-      <div className="p-4 sm:p-6 max-w-[1440px] mx-auto space-y-4 sm:space-y-6">
+    <div className="min-h-screen bg-ink-50">
+      <div className="p-5 md:p-7 lg:p-8 max-w-[1440px] mx-auto space-y-6 md:space-y-8">
 
         {/* ── Page header ── */}
         <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-[#003580] tracking-tight">Vozni park</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Praćenje inventara i dostupnosti vozila</p>
+            <h1 className="text-[28px] font-bold text-ink-800 tracking-tight">Vozni park</h1>
+            <p className="text-[13px] text-ink-500 mt-1">Praćenje inventara i dostupnosti vozila</p>
           </div>
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setShowGlobalExpense(true)}
-              className="flex items-center gap-2 px-4 py-2 border border-amber-400 text-amber-700 rounded-lg text-sm font-semibold bg-amber-50 hover:bg-amber-100 transition-colors shadow-sm"
+              className="btn-secondary text-amber-700 border-amber-300 bg-amber-50 hover:bg-amber-100"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/>
@@ -273,7 +273,7 @@ export default function FleetPage() {
             </button>
             <button
               onClick={openAdd}
-              className="flex items-center gap-2 px-4 py-2 bg-[#003580] text-white rounded-lg text-sm font-semibold hover:bg-[#002660] transition-colors shadow-sm"
+              className="btn-primary"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"/>
@@ -287,12 +287,12 @@ export default function FleetPage() {
         {/* ── Stat cards ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: "Ukupno vozila", value: vehicles.length, dot: "bg-[#003580]", val_color: "text-[#003580]" },
+            { label: "Ukupno vozila", value: vehicles.length, dot: "bg-brand-500", val_color: "text-brand-500" },
             { label: "Slobodna", value: counts.free || 0, dot: "bg-emerald-500", val_color: "text-emerald-600" },
             { label: "U najmu", value: counts.rented || 0, dot: "bg-blue-600", val_color: "text-blue-700" },
             { label: "Na servisu", value: (counts.service || 0) + (counts.washing || 0), dot: "bg-amber-400", val_color: "text-amber-600" },
           ].map((s) => (
-            <div key={s.label} className="bg-white rounded-xl border border-[#E7E7E7] shadow-sm p-5">
+            <div key={s.label} className="bg-white rounded-xl border border-ink-150 shadow-sm p-5">
               <div className="flex items-center gap-2 mb-3">
                 <div className={clsx("w-2 h-2 rounded-full flex-shrink-0", s.dot)} />
                 <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{s.label}</span>
@@ -303,8 +303,8 @@ export default function FleetPage() {
         </div>
 
         {/* ── Fleet Timeline ── */}
-        <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E7E7E7] flex items-center justify-between">
+        <div className="bg-white border border-ink-150 rounded-xl shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-ink-150 flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold text-slate-800">Raspored flote</h2>
               <p className="text-xs text-slate-400 mt-0.5">14-dnevni pregled dostupnosti</p>
@@ -312,7 +312,7 @@ export default function FleetPage() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3 text-xs text-slate-500">
                 {[
-                  { color: "bg-[#003580]", label: "U najmu" },
+                  { color: "bg-brand-500", label: "U najmu" },
                   { color: "bg-amber-400", label: "Servis/pranje" },
                 ].map((l) => (
                   <div key={l.label} className="flex items-center gap-1.5">
@@ -325,7 +325,7 @@ export default function FleetPage() {
                 {timelineOffset !== 0 && (
                   <button
                     onClick={() => setTimelineOffset(0)}
-                    className="px-2 py-1 text-xs font-semibold text-[#003580] hover:bg-blue-50 rounded-md transition-colors"
+                    className="px-2 py-1 text-xs font-semibold text-brand-500 hover:bg-blue-50 rounded-md transition-colors"
                   >
                     Danas
                   </button>
@@ -357,19 +357,19 @@ export default function FleetPage() {
           <div className="overflow-x-auto">
             <div className="min-w-[800px]">
               {/* Header row */}
-              <div className="grid border-b border-[#E7E7E7]" style={{ gridTemplateColumns: "180px repeat(14, 1fr)" }}>
+              <div className="grid border-b border-ink-150" style={{ gridTemplateColumns: "180px repeat(14, 1fr)" }}>
                 <div className="px-4 py-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Vozilo</div>
                 {timelineDays.map((d, i) => {
                   const isToday = d.toDateString() === new Date().toDateString();
                   return (
                     <div key={i} className={clsx(
                       "py-2 text-center text-[11px] font-semibold",
-                      isToday ? "bg-[#003580]/5 text-[#003580]" : "text-slate-400"
+                      isToday ? "bg-brand-500/5 text-brand-500" : "text-slate-400"
                     )}>
                       <div>{["Ned", "Pon", "Uto", "Sri", "Čet", "Pet", "Sub"][d.getDay()]}</div>
                       <div className={clsx(
                         "text-[13px] font-bold",
-                        isToday ? "text-[#003580]" : "text-slate-600"
+                        isToday ? "text-brand-500" : "text-slate-600"
                       )}>{d.getDate()}</div>
                     </div>
                   );
@@ -388,7 +388,7 @@ export default function FleetPage() {
                       className="px-4 py-2.5 flex flex-col justify-center cursor-pointer"
                       onClick={() => router.push(`/dashboard/fleet/${v.id}`)}
                     >
-                      <span className="text-xs font-semibold text-slate-800 truncate hover:text-[#003580] transition-colors">{v.make} {v.model}</span>
+                      <span className="text-xs font-semibold text-slate-800 truncate hover:text-brand-500 transition-colors">{v.make} {v.model}</span>
                       <span className="text-[10px] text-slate-400 font-mono">{v.registration}</span>
                     </div>
                     {timelineDays.map((day, i) => {
@@ -400,11 +400,11 @@ export default function FleetPage() {
                       let bg = "";
                       let tooltip = "";
                       if (rental) {
-                        bg = "bg-[#003580]";
+                        bg = "bg-brand-500";
                         const clientName = Array.isArray(rental.clients) ? rental.clients[0]?.full_name : rental.clients?.full_name;
                         tooltip = clientName ?? "U najmu";
                       } else if (v.status === "rented") {
-                        bg = "bg-[#003580]";
+                        bg = "bg-brand-500";
                         tooltip = "U najmu";
                       } else if (isService) {
                         bg = "bg-amber-400";
@@ -420,7 +420,7 @@ export default function FleetPage() {
                           title={tooltip}
                           className={clsx(
                             "h-full min-h-[40px] relative",
-                            isToday ? "bg-[#003580]/5" : ""
+                            isToday ? "bg-brand-500/5" : ""
                           )}
                         >
                           {bg && (
@@ -446,36 +446,52 @@ export default function FleetPage() {
         <div className="grid grid-cols-12 gap-6">
 
           {/* ── Inventory table (8 cols) ── */}
-          <div className="col-span-12 lg:col-span-8 bg-white rounded-xl border border-[#E7E7E7] shadow-sm flex flex-col">
+          <div className="col-span-12 lg:col-span-8 bg-white rounded-xl border border-ink-150 shadow-sm flex flex-col">
             {/* quick-add expense row */}
             <QuickAddRow vehicles={vehicles} />
             {/* table toolbar */}
-            <div className="px-5 py-4 border-b border-[#E7E7E7] flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-base font-semibold text-slate-800">Inventar vozila</h2>
+            <div className="px-5 md:px-6 py-4 border-b border-ink-150 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-base font-bold text-ink-800">Inventar vozila</h2>
               <div className="flex flex-wrap items-center gap-2">
                 {/* search */}
                 <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 w-4 h-4 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                   </svg>
                   <input
-                    className="pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 focus:border-[#003580] focus:bg-white rounded-lg text-sm outline-none transition-all w-52 placeholder:text-slate-400"
+                    className="input-sm pl-9 w-56"
                     placeholder="Pretraži vozila..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
                 </div>
-                {/* filter pills */}
-                <div className="flex items-center gap-0.5 bg-slate-100 border border-slate-200 rounded-lg p-1">
+
+                {/* Mobile/tablet: Filteri button opens bottom sheet */}
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen(true)}
+                  className="btn-secondary lg:hidden"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                  </svg>
+                  Filteri
+                  {filter !== "all" && (
+                    <span className="ml-1 text-[10px] font-bold bg-brand-50 text-brand-600 rounded px-1.5 py-0.5">1</span>
+                  )}
+                </button>
+
+                {/* Desktop: segmented chips */}
+                <div className="hidden lg:flex items-center gap-0.5 bg-ink-100 border border-ink-150 rounded-xl p-1">
                   {(["all", "free", "rented", "service", "washing", "inactive"] as const).map((s) => (
                     <button
                       key={s}
                       onClick={() => setFilter(s)}
                       className={clsx(
-                        "px-2.5 py-1 rounded-md text-xs font-semibold transition-all whitespace-nowrap",
+                        "h-9 px-3.5 rounded-lg text-[12.5px] font-bold transition-all whitespace-nowrap",
                         filter === s
-                          ? "bg-[#003580] text-white shadow-sm"
-                          : "text-slate-500 hover:text-slate-800"
+                          ? "bg-white text-brand-500 shadow-card"
+                          : "text-ink-500 hover:text-ink-800"
                       )}
                     >
                       {s === "all" ? "Sva" : STATUS_LABELS[s]}
@@ -488,7 +504,30 @@ export default function FleetPage() {
             {/* table body */}
             <div className="overflow-x-auto flex-1">
               {loading ? (
-                <div className="flex items-center justify-center py-16 text-slate-400 text-sm">Učitavanje...</div>
+                <table className="w-full" aria-busy="true" aria-label="Učitavanje vozila">
+                  <tbody>
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <tr key={i} className="border-b border-slate-100">
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-3">
+                            <Skeleton className="w-12 h-8" rounded="md" />
+                            <div className="space-y-2">
+                              <Skeleton className="h-3.5 w-32" />
+                              <Skeleton className="h-2.5 w-16" />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4"><Skeleton className="h-4 w-20" /></td>
+                        <td className="px-4 py-4"><Skeleton className="h-4 w-10" /></td>
+                        <td className="px-4 py-4"><Skeleton className="h-4 w-16" /></td>
+                        <td className="px-4 py-4"><Skeleton className="h-4 w-16" /></td>
+                        <td className="px-4 py-4"><Skeleton className="h-4 w-20" /></td>
+                        <td className="px-4 py-4"><Skeleton className="h-5 w-20" rounded="full" /></td>
+                        <td className="px-4 py-4"><Skeleton className="h-3 w-12" /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-slate-400 gap-2">
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-30">
@@ -511,28 +550,16 @@ export default function FleetPage() {
                   <tbody className="divide-y divide-slate-100">
                     {filtered.map((v) => (
                       <tr key={v.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3.5">
                           <div className="flex items-center gap-3">
-                            {(() => {
-                              const photo = getVehiclePhoto(v.make, v.model);
-                              return photo ? (
-                                <img src={photo} alt={`${v.make} ${v.model}`} className="w-12 h-8 object-contain flex-shrink-0 rounded" />
-                              ) : (
-                                <div className="w-12 h-8 bg-slate-100 rounded flex items-center justify-center flex-shrink-0">
-                                  <svg viewBox="0 0 240 100" className="w-8 h-4 fill-slate-300">
-                                    <path d="M30 65 L30 55 Q32 45 50 40 L80 30 Q100 20 130 20 L165 20 Q185 20 200 30 L215 40 Q225 45 225 55 L225 65 Q220 70 210 70 L200 70 Q198 60 185 60 Q172 60 170 70 L80 70 Q78 60 65 60 Q52 60 50 70 L40 70 Q30 70 30 65 Z"/>
-                                    <circle cx="65" cy="70" r="12"/><circle cx="185" cy="70" r="12"/>
-                                  </svg>
-                                </div>
-                              );
-                            })()}
+                            <VehiclePhoto make={v.make} model={v.model} variant="thumb" />
                             <div>
-                              <div className="font-semibold text-slate-800 text-sm leading-tight">{v.make} {v.model}</div>
-                              {v.color && <div className="text-xs text-slate-400 mt-0.5">{v.color}</div>}
+                              <div className="font-bold text-ink-800 text-[14px] leading-tight">{v.make} {v.model}</div>
+                              {v.color && <div className="text-[12px] text-ink-400 mt-0.5">{v.color} · {v.year}</div>}
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm font-mono font-semibold text-[#003580] whitespace-nowrap">{v.registration}</td>
+                        <td className="px-4 py-3 text-sm font-mono font-semibold text-brand-500 whitespace-nowrap">{v.registration}</td>
                         <td className="px-4 py-3 text-sm text-slate-500">{v.year}</td>
                         <td className="px-4 py-3 text-sm text-slate-500 whitespace-nowrap">{v.current_km?.toLocaleString()} km</td>
                         <td className="px-4 py-3 text-sm font-semibold text-slate-700 whitespace-nowrap">
@@ -550,27 +577,25 @@ export default function FleetPage() {
                             </span>
                           ) : <span className="text-slate-300">—</span>}
                         </td>
-                        <td className="px-4 py-3">
-                          <select
-                            value={v.status}
-                            disabled={updatingStatus === v.id}
-                            onChange={(e) => updateStatus(v.id, e.target.value)}
-                            className={clsx(
-                              "text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 border-0 outline-none cursor-pointer appearance-none text-center disabled:opacity-50",
-                              STATUS_BADGE[v.status] ?? "bg-slate-100 text-slate-500"
-                            )}
-                          >
-                            {Object.entries(STATUS_LABELS).map(([k, label]) => (
-                              <option key={k} value={k}>{label}</option>
-                            ))}
-                          </select>
+                        <td className="px-4 py-3.5">
+                          <VehicleStatusPill
+                            vehicle={v}
+                            onUpdated={(next) =>
+                              setVehicles((prev) =>
+                                prev.map((row) => (row.id === v.id ? { ...row, status: next } : row))
+                              )
+                            }
+                          />
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3.5 text-right">
                           <button
                             onClick={() => router.push(`/dashboard/fleet/${v.id}`)}
-                            className="text-[#006CE4] text-xs font-semibold hover:underline whitespace-nowrap"
+                            aria-label={`Detalji za ${v.make} ${v.model}`}
+                            className="h-11 w-11 inline-flex items-center justify-center rounded-lg text-ink-500 hover:text-brand-500 hover:bg-brand-50 transition-colors"
                           >
-                            Detalji
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="9 18 15 12 9 6"/>
+                            </svg>
                           </button>
                         </td>
                       </tr>
@@ -581,7 +606,7 @@ export default function FleetPage() {
             </div>
 
             {/* table footer */}
-            <div className="px-5 py-3 bg-slate-50 border-t border-[#E7E7E7] rounded-b-xl">
+            <div className="px-5 py-3 bg-slate-50 border-t border-ink-150 rounded-b-xl">
               <span className="text-xs text-slate-500">
                 Prikazano {filtered.length} od {vehicles.length} vozila
               </span>
@@ -592,12 +617,12 @@ export default function FleetPage() {
           <div className="col-span-12 lg:col-span-4 space-y-4">
 
             {/* Utilization rate */}
-            <div className="bg-white rounded-xl border border-[#E7E7E7] shadow-sm p-5">
+            <div className="bg-white rounded-xl border border-ink-150 shadow-sm p-5">
               <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-4">
                 Stopa iskorištenosti
               </h3>
               <div className="flex items-end gap-4 mb-3">
-                <span className="text-4xl font-bold text-[#003580] leading-none">{utilizationRate}%</span>
+                <span className="text-4xl font-bold text-brand-500 leading-none">{utilizationRate}%</span>
                 <span className="text-emerald-600 text-xs font-semibold mb-1 flex items-center gap-0.5">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
@@ -608,7 +633,7 @@ export default function FleetPage() {
               </div>
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[#003580] rounded-full transition-all duration-700"
+                  className="h-full bg-brand-500 rounded-full transition-all duration-700"
                   style={{ width: `${utilizationRate}%` }}
                 />
               </div>
@@ -618,7 +643,7 @@ export default function FleetPage() {
             </div>
 
             {/* Fleet status breakdown */}
-            <div className="bg-white rounded-xl border border-[#E7E7E7] shadow-sm p-5">
+            <div className="bg-white rounded-xl border border-ink-150 shadow-sm p-5">
               <h3 className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-4">
                 Status flote
               </h3>
@@ -670,7 +695,7 @@ export default function FleetPage() {
       {/* ── Add / Edit modal ── */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl border border-[#E7E7E7] shadow-2xl w-full max-w-2xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl border border-ink-150 shadow-2xl w-full max-w-2xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-slate-800">
                 {isEditing ? "Uredi vozilo" : "Novo vozilo"}
@@ -716,7 +741,7 @@ export default function FleetPage() {
                   Status
                 </label>
                 <select
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580] transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
                   value={editingVehicle.status ?? "free"}
                   onChange={(e) => setField("status", e.target.value)}
                 >
@@ -765,13 +790,13 @@ export default function FleetPage() {
                     className={clsx(
                       "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all active:scale-95",
                       editingVehicle.model_3d === m.key
-                        ? "border-[#003580]/60 bg-[#003580]/5 ring-2 ring-[#003580]/20"
+                        ? "border-[#003580]/60 bg-brand-500/5 ring-2 ring-[#003580]/20"
                         : "border-slate-200 bg-white hover:border-[#003580]/30"
                     )}
                   >
                     <div className={clsx(
                       "w-9 h-9 rounded-full flex items-center justify-center",
-                      editingVehicle.model_3d === m.key ? "bg-[#003580]" : "bg-slate-100"
+                      editingVehicle.model_3d === m.key ? "bg-brand-500" : "bg-slate-100"
                     )}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke={editingVehicle.model_3d === m.key ? "white" : "#64748b"}
@@ -794,7 +819,7 @@ export default function FleetPage() {
                 Napomene
               </label>
               <textarea
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580] transition-all min-h-[80px] resize-none"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all min-h-[80px] resize-none"
                 placeholder="Dodatne napomene..."
                 value={editingVehicle.notes ?? ""}
                 onChange={(e) => setField("notes", e.target.value)}
@@ -811,7 +836,7 @@ export default function FleetPage() {
               <button
                 onClick={save}
                 disabled={saving}
-                className="px-4 py-2 bg-[#003580] hover:bg-[#002660] text-white font-semibold rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? "Čuvanje..." : isEditing ? "Spremi promjene" : "Dodaj vozilo"}
               </button>
@@ -824,6 +849,17 @@ export default function FleetPage() {
         isOpen={showGlobalExpense}
         onClose={() => setShowGlobalExpense(false)}
         onSaved={load}
+      />
+
+      <FleetFiltersSheet
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        filter={filter}
+        onFilterChange={setFilter}
+        sort={sort}
+        onSortChange={setSort}
+        counts={counts}
+        totalShown={filtered.length}
       />
     </div>
   );

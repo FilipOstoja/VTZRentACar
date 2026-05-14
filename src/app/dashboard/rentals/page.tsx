@@ -8,6 +8,7 @@ import ContractPreviewModal from "@/components/ContractPreviewModal";
 import RentalDetailsModal from "@/components/RentalDetailsModal";
 import clsx from "clsx";
 import type { ContractData } from "@/components/RentalContractPDF";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface Rental {
   id: string;
@@ -73,7 +74,7 @@ function ModalInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580] transition-all"
+      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
     />
   );
 }
@@ -81,7 +82,7 @@ function ModalSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...props}
-      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580] transition-all"
+      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
     />
   );
 }
@@ -343,13 +344,13 @@ export default function RentalsPage() {
   const activeCount = rentals.filter((r) => r.status === "active").length;
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC]">
+    <div className="min-h-screen bg-ink-50">
       <div className="p-4 sm:p-6 max-w-[1440px] mx-auto space-y-4 sm:space-y-6">
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-[#003580] tracking-tight">Kratkoročni najam</h1>
+            <h1 className="text-2xl font-bold text-brand-500 tracking-tight">Kratkoročni najam</h1>
             <p className="text-sm text-slate-500 mt-0.5">{activeCount} aktivnih najma</p>
           </div>
           <button onClick={openModal} className="btn-primary self-start sm:self-auto">
@@ -361,14 +362,43 @@ export default function RentalsPage() {
         </div>
 
         {/* Table */}
-        <div className="bg-white border border-[#E7E7E7] rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-ink-150 rounded-xl shadow-sm overflow-hidden">
           {loading ? (
-            <div className="py-16 text-center text-slate-400 text-sm">Učitavanje...</div>
+            <table className="w-full" aria-busy="true" aria-label="Učitavanje najma">
+              <thead className="bg-slate-50 border-b border-ink-150">
+                <tr>
+                  {["Vozilo", "Klijent", "Od", "Do", "Dana", "Iznos", "Oštećenja", "Status", ""].map((h) => (
+                    <th key={h} className="table-header">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <tr key={i} className="border-b border-slate-100">
+                    <td className="px-4 py-4">
+                      <Skeleton className="h-4 w-32 mb-1.5" />
+                      <Skeleton className="h-3 w-20" />
+                    </td>
+                    <td className="px-4 py-4">
+                      <Skeleton className="h-4 w-28 mb-1.5" />
+                      <Skeleton className="h-3 w-24" />
+                    </td>
+                    <td className="px-4 py-4"><Skeleton className="h-4 w-20" /></td>
+                    <td className="px-4 py-4"><Skeleton className="h-4 w-20" /></td>
+                    <td className="px-4 py-4"><Skeleton className="h-4 w-8" /></td>
+                    <td className="px-4 py-4"><Skeleton className="h-4 w-24" /></td>
+                    <td className="px-4 py-4"><Skeleton className="h-5 w-24" rounded="full" /></td>
+                    <td className="px-4 py-4"><Skeleton className="h-5 w-20" rounded="full" /></td>
+                    <td className="px-4 py-4"><Skeleton className="h-3 w-12" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : rentals.length === 0 ? (
             <div className="py-16 text-center text-slate-400 text-sm">Nema najma</div>
           ) : (
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-[#E7E7E7]">
+              <thead className="bg-slate-50 border-b border-ink-150">
                 <tr>
                   {["Vozilo", "Klijent", "Od", "Do", "Dana", "Iznos", "Oštećenja", "Status", ""].map((h) => (
                     <th key={h} className="table-header">{h}</th>
@@ -391,7 +421,7 @@ export default function RentalsPage() {
                     >
                       <td className="table-cell">
                         <div className="font-semibold text-slate-800">{r.vehicles?.make} {r.vehicles?.model}</div>
-                        <div className="text-xs font-mono text-[#003580] font-semibold">{r.vehicles?.registration}</div>
+                        <div className="text-xs font-mono text-brand-500 font-semibold">{r.vehicles?.registration}</div>
                       </td>
                       <td className="table-cell">
                         <div className="text-slate-700">{r.clients?.full_name}</div>
@@ -454,24 +484,24 @@ export default function RentalsPage() {
       {/* ── New rental modal ── */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white border border-[#E7E7E7] rounded-2xl shadow-2xl w-full max-w-2xl animate-slide-up flex flex-col max-h-[92vh]">
+          <div className="bg-white border border-ink-150 rounded-2xl shadow-2xl w-full max-w-2xl animate-slide-up flex flex-col max-h-[92vh]">
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#E7E7E7] flex-shrink-0">
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-ink-150 flex-shrink-0">
               <div>
                 <h2 className="text-lg font-bold text-slate-800">Novi kratkoročni najam</h2>
                 {step > 0 && (
                   <div className="flex items-center gap-2 mt-1.5">
                     <button
                       onClick={() => setStep(1)}
-                      className={clsx("flex items-center gap-1.5 text-xs font-semibold transition-colors", step === 1 ? "text-[#003580]" : step1Valid ? "text-slate-400 hover:text-slate-700 cursor-pointer" : "text-slate-300 cursor-default")}
+                      className={clsx("flex items-center gap-1.5 text-xs font-semibold transition-colors", step === 1 ? "text-brand-500" : step1Valid ? "text-slate-400 hover:text-slate-700 cursor-pointer" : "text-slate-300 cursor-default")}
                     >
-                      <span className={clsx("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", step === 1 ? "bg-[#003580] text-white" : step1Valid ? "bg-slate-200 text-slate-600" : "bg-slate-100 text-slate-400")}>1</span>
+                      <span className={clsx("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", step === 1 ? "bg-brand-500 text-white" : step1Valid ? "bg-slate-200 text-slate-600" : "bg-slate-100 text-slate-400")}>1</span>
                       Detalji najma
                     </button>
                     <span className="text-slate-300">›</span>
-                    <span className={clsx("flex items-center gap-1.5 text-xs font-semibold", step === 2 ? "text-[#003580]" : "text-slate-400")}>
-                      <span className={clsx("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", step === 2 ? "bg-[#003580] text-white" : "bg-slate-100 text-slate-400")}>2</span>
+                    <span className={clsx("flex items-center gap-1.5 text-xs font-semibold", step === 2 ? "text-brand-500" : "text-slate-400")}>
+                      <span className={clsx("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold", step === 2 ? "bg-brand-500 text-white" : "bg-slate-100 text-slate-400")}>2</span>
                       Pregled vozila
                       {damages.length > 0 && <span className="bg-amber-500 text-white text-[10px] rounded-full px-1.5">{damages.length}</span>}
                     </span>
@@ -514,17 +544,17 @@ export default function RentalsPage() {
                     <button
                       type="button"
                       onClick={() => { setClientMode("existing"); setStep(1); }}
-                      className="group flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-[#003580]/20 bg-[#003580]/5 hover:border-[#003580]/40 hover:bg-[#003580]/10 transition-all active:scale-95"
+                      className="group flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-[#003580]/20 bg-brand-500/5 hover:border-[#003580]/40 hover:bg-brand-500/10 transition-all active:scale-95"
                     >
-                      <div className="w-16 h-16 rounded-full bg-[#003580] flex items-center justify-center shadow-md shadow-[#003580]/20 group-hover:scale-105 transition-transform">
+                      <div className="w-16 h-16 rounded-full bg-brand-500 flex items-center justify-center shadow-md shadow-[#003580]/20 group-hover:scale-105 transition-transform">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
                           <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
                         </svg>
                       </div>
                       <div className="text-center">
-                        <div className="text-sm font-bold text-[#003580]">Postojeći klijent</div>
-                        <div className="text-xs text-[#003580]/60 mt-0.5">Odaberi iz baze klijenata</div>
+                        <div className="text-sm font-bold text-brand-500">Postojeći klijent</div>
+                        <div className="text-xs text-brand-500/60 mt-0.5">Odaberi iz baze klijenata</div>
                       </div>
                     </button>
                   </div>
@@ -536,7 +566,7 @@ export default function RentalsPage() {
 
                   {/* New client: photos FIRST, then fields */}
                   {clientMode === "new" && (
-                    <div className="bg-slate-50 border border-[#E7E7E7] rounded-xl p-4 space-y-4">
+                    <div className="bg-slate-50 border border-ink-150 rounded-xl p-4 space-y-4">
 
                       {/* 1. Photo upload */}
                       <div>
@@ -547,7 +577,7 @@ export default function RentalsPage() {
                               type="button"
                               onClick={() => scanLicense(newClientForm.license_photo_front!)}
                               disabled={scanning}
-                              className="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-[#003580] text-white hover:bg-[#00256a] disabled:opacity-60 transition-colors"
+                              className="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-brand-500 text-white hover:bg-[#00256a] disabled:opacity-60 transition-colors"
                             >
                               {scanning ? (
                                 <>
@@ -623,7 +653,7 @@ export default function RentalsPage() {
                           </label>
                         </div>
                         {scanning && (
-                          <p className="text-[11px] text-[#003580] mt-2 font-medium animate-pulse">AI čita podatke s vozačke dozvole...</p>
+                          <p className="text-[11px] text-brand-500 mt-2 font-medium animate-pulse">AI čita podatke s vozačke dozvole...</p>
                         )}
                       </div>
 
@@ -720,8 +750,8 @@ export default function RentalsPage() {
                     </div>
                   </div>
                   {step1Valid && (
-                    <div className="bg-[#003580]/5 border border-[#003580]/15 rounded-xl p-4 space-y-2">
-                      <h3 className="text-[11px] font-bold text-[#003580] uppercase tracking-wider">Pregled iznosa</h3>
+                    <div className="bg-brand-500/5 border border-[#003580]/15 rounded-xl p-4 space-y-2">
+                      <h3 className="text-[11px] font-bold text-brand-500 uppercase tracking-wider">Pregled iznosa</h3>
                       <div className="flex justify-between text-sm">
                         <span className="text-slate-500">Broj dana:</span>
                         <span className="text-slate-800 font-semibold">{totalDays} dan(a)</span>
@@ -736,7 +766,7 @@ export default function RentalsPage() {
                       <div className="flex justify-between text-sm font-bold border-t border-[#003580]/15 pt-2 mt-2">
                         <span className="text-slate-600">Ukupno:</span>
                         <div className="text-right">
-                          <span className="text-[#003580] text-lg">{(totalAmount * 1.9583).toFixed(2)} KM</span>
+                          <span className="text-brand-500 text-lg">{(totalAmount * 1.9583).toFixed(2)} KM</span>
                           <div className="text-xs text-slate-400 font-normal">≈ €{totalAmount.toFixed(2)}</div>
                         </div>
                       </div>
@@ -790,15 +820,15 @@ export default function RentalsPage() {
                         onClick={() => setForm((p) => ({ ...p, pickup_type: "airport" }))}
                         className={`group flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all active:scale-95 ${
                           form.pickup_type === "airport"
-                            ? "border-[#003580]/60 bg-[#003580]/8 ring-2 ring-[#003580]/20"
-                            : "border-[#003580]/20 bg-[#003580]/5 hover:border-[#003580]/35 hover:bg-[#003580]/8"
+                            ? "border-[#003580]/60 bg-brand-500/8 ring-2 ring-[#003580]/20"
+                            : "border-[#003580]/20 bg-brand-500/5 hover:border-[#003580]/35 hover:bg-brand-500/8"
                         }`}
                         style={form.pickup_type === "airport" ? { backgroundColor: "rgba(0,53,128,0.06)" } : {}}
                       >
                         <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-transform group-hover:scale-105 ${
                           form.pickup_type === "airport"
-                            ? "bg-[#003580] shadow-[#003580]/30"
-                            : "bg-[#003580]/60 shadow-[#003580]/10"
+                            ? "bg-brand-500 shadow-[#003580]/30"
+                            : "bg-brand-500/60 shadow-[#003580]/10"
                         }`}>
                           {/* Airplane icon */}
                           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -806,13 +836,13 @@ export default function RentalsPage() {
                           </svg>
                         </div>
                         <div className="text-center">
-                          <div className={`text-sm font-bold ${form.pickup_type === "airport" ? "text-[#003580]" : "text-[#003580]/70"}`}>
+                          <div className={`text-sm font-bold ${form.pickup_type === "airport" ? "text-brand-500" : "text-brand-500/70"}`}>
                             Aerodrom
                           </div>
-                          <div className="text-xs text-[#003580]/50 mt-0.5">Preuzimanje s leta</div>
+                          <div className="text-xs text-brand-500/50 mt-0.5">Preuzimanje s leta</div>
                         </div>
                         {form.pickup_type === "airport" && (
-                          <div className="w-5 h-5 rounded-full bg-[#003580] flex items-center justify-center">
+                          <div className="w-5 h-5 rounded-full bg-brand-500 flex items-center justify-center">
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="20 6 9 17 4 12"/>
                             </svg>
@@ -848,8 +878,8 @@ export default function RentalsPage() {
 
               {step === 2 && (
                 <div className="space-y-3">
-                  <div className="bg-slate-50 border border-[#E7E7E7] rounded-xl p-3 flex items-center gap-3 text-sm">
-                    <div className="w-8 h-8 rounded-lg bg-[#003580]/10 border border-[#003580]/20 flex items-center justify-center flex-shrink-0">
+                  <div className="bg-slate-50 border border-ink-150 rounded-xl p-3 flex items-center gap-3 text-sm">
+                    <div className="w-8 h-8 rounded-lg bg-brand-500/10 border border-[#003580]/20 flex items-center justify-center flex-shrink-0">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#003580" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M5 17H3a2 2 0 01-2-2V9a2 2 0 012-2h16a2 2 0 012 2v6a2 2 0 01-2 2h-2"/>
                         <rect x="7" y="14" width="10" height="5" rx="2"/>
@@ -858,7 +888,7 @@ export default function RentalsPage() {
                     <div>
                       <p className="text-slate-800 font-semibold">
                         {selectedVehicle?.make} {selectedVehicle?.model}
-                        <span className="ml-2 text-[#003580] font-mono text-xs">{selectedVehicle?.registration}</span>
+                        <span className="ml-2 text-brand-500 font-mono text-xs">{selectedVehicle?.registration}</span>
                       </p>
                       <p className="text-slate-500 text-xs">Označite sva postojeća oštećenja na vozilu prije predaje klijentu</p>
                     </div>
@@ -876,7 +906,7 @@ export default function RentalsPage() {
             </div>
 
             {/* Footer */}
-            <div className="flex flex-col gap-2 px-4 sm:px-6 py-4 border-t border-[#E7E7E7] flex-shrink-0">
+            <div className="flex flex-col gap-2 px-4 sm:px-6 py-4 border-t border-ink-150 flex-shrink-0">
               {step === 2 && damages.length > 0 && (
                 <p className="text-xs text-slate-500">
                   <span className="text-amber-600 font-semibold">{damages.length}</span> oštećenje(a) zabilježeno
@@ -943,13 +973,13 @@ export default function RentalsPage() {
       {/* ── Return inspection modal ── */}
       {returnModal && returnRental && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white border border-[#E7E7E7] rounded-2xl shadow-2xl w-full max-w-2xl animate-slide-up flex flex-col max-h-[92vh]">
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#E7E7E7] flex-shrink-0">
+          <div className="bg-white border border-ink-150 rounded-2xl shadow-2xl w-full max-w-2xl animate-slide-up flex flex-col max-h-[92vh]">
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-ink-150 flex-shrink-0">
               <div>
                 <h2 className="text-lg font-bold text-slate-800">Povratni pregled vozila</h2>
                 <p className="text-sm text-slate-500 mt-0.5">
                   {returnRental.vehicles?.make} {returnRental.vehicles?.model}
-                  <span className="ml-2 text-[#003580] font-mono text-xs font-semibold">{returnRental.vehicles?.registration}</span>
+                  <span className="ml-2 text-brand-500 font-mono text-xs font-semibold">{returnRental.vehicles?.registration}</span>
                 </p>
               </div>
               <button onClick={() => setReturnModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
@@ -960,7 +990,7 @@ export default function RentalsPage() {
             </div>
             <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
               {/* Kilometraža capture */}
-              <div className="bg-slate-50 border border-[#E7E7E7] rounded-xl p-4">
+              <div className="bg-slate-50 border border-ink-150 rounded-xl p-4">
                 <ModalLabel>Kilometraža</ModalLabel>
                 <div className="flex items-baseline justify-between text-sm mb-3">
                   <span className="text-slate-500">Pri preuzimanju:</span>
@@ -1012,7 +1042,7 @@ export default function RentalsPage() {
                 }
               />
             </div>
-            <div className="flex flex-col gap-3 px-6 py-4 border-t border-[#E7E7E7] flex-shrink-0">
+            <div className="flex flex-col gap-3 px-6 py-4 border-t border-ink-150 flex-shrink-0">
               {returnDamages.length > 0 ? (
                 <label className="flex items-center gap-2.5 cursor-pointer select-none p-2.5 rounded-lg bg-amber-50 border border-amber-200">
                   <input

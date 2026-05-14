@@ -220,7 +220,7 @@ function PinPopup({ zone, note, photo, onNoteChange, onPhotoChange, onConfirm, o
     reader.readAsDataURL(file);
   };
   return (
-    <div className="bg-white border border-[#E7E7E7] rounded-xl p-4 space-y-3 animate-slide-up shadow-lg">
+    <div className="bg-white border border-ink-150 rounded-xl p-4 space-y-3 animate-slide-up shadow-lg">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-slate-800">Novo oštećenje</p>
         <button onClick={onCancel} className="text-slate-400 hover:text-slate-600 transition-colors"><X size={16} /></button>
@@ -229,7 +229,7 @@ function PinPopup({ zone, note, photo, onNoteChange, onPhotoChange, onConfirm, o
         value={note}
         onChange={(e) => onNoteChange(e.target.value)}
         placeholder="Opis oštećenja (ogrebotina, udubljenje, pukotina...)"
-        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580] transition-all resize-none h-20"
+        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all resize-none h-20"
         autoFocus
       />
       <div className="flex items-center gap-3">
@@ -314,7 +314,7 @@ export function Car3DInspector({ damages, onChange, preExistingDamages = [], mod
     <div className="space-y-3">
       {/* Legend when doing return inspection */}
       {preExistingDamages.length > 0 && (
-        <div className="flex items-center gap-4 text-xs bg-slate-50 border border-[#E7E7E7] rounded-lg px-3 py-2">
+        <div className="flex items-center gap-4 text-xs bg-slate-50 border border-ink-150 rounded-lg px-3 py-2">
           <span className="flex items-center gap-1.5 text-indigo-600">
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block flex-shrink-0" />
             {preExistingDamages.length} oštećenja pri preuzimanju
@@ -329,21 +329,21 @@ export function Car3DInspector({ damages, onChange, preExistingDamages = [], mod
       {/* Instructions */}
       <div className="flex items-center justify-between text-xs text-slate-500">
         <span>
-          <span className="text-[#003580] font-medium">Kliknite</span> na auto ·{" "}
-          <span className="text-[#003580] font-medium">Povucite</span> za rotaciju ·{" "}
-          <span className="text-[#003580] font-medium">Scroll</span> za zoom
+          <span className="text-brand-500 font-medium">Kliknite</span> na auto ·{" "}
+          <span className="text-brand-500 font-medium">Povucite</span> za rotaciju ·{" "}
+          <span className="text-brand-500 font-medium">Scroll</span> za zoom
         </span>
         {damages.length > 0 && <span className="text-amber-600 font-medium">{damages.length} oštećenje(a)</span>}
       </div>
 
       {/* 3D canvas */}
-      <div className="relative rounded-xl overflow-hidden border border-[#E7E7E7] bg-slate-50" style={{ height: 380 }}>
+      <div className="relative rounded-xl overflow-hidden border border-ink-150 bg-slate-50" style={{ height: 380 }}>
         <button onClick={() => handleRotate("left")}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-slate-100 border border-[#E7E7E7] flex items-center justify-center text-slate-500 hover:text-slate-800 transition-all shadow-sm">
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-slate-100 border border-ink-150 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-all shadow-sm">
           <ChevronLeft size={18} />
         </button>
         <button onClick={() => handleRotate("right")}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-slate-100 border border-[#E7E7E7] flex items-center justify-center text-slate-500 hover:text-slate-800 transition-all shadow-sm">
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-slate-100 border border-ink-150 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-all shadow-sm">
           <ChevronRight size={18} />
         </button>
 
@@ -374,7 +374,7 @@ export function Car3DInspector({ damages, onChange, preExistingDamages = [], mod
         </Canvas>
 
         {pending && (
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-[#003580]/90 text-white text-xs px-3 py-1 rounded-full font-medium pointer-events-none">
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-brand-500/90 text-white text-xs px-3 py-1 rounded-full font-medium pointer-events-none">
             Pozicija označena — unesite opis ispod
           </div>
         )}
@@ -398,7 +398,7 @@ export function Car3DInspector({ damages, onChange, preExistingDamages = [], mod
 
       {/* New pin detail */}
       {selectedPinData && !pending && (
-        <div className="bg-white border border-[#E7E7E7] rounded-xl p-4 space-y-2 animate-slide-up shadow-sm">
+        <div className="bg-white border border-ink-150 rounded-xl p-4 space-y-2 animate-slide-up shadow-sm">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-slate-800">{selectedPinData.note}</p>
@@ -431,7 +431,7 @@ export function Car3DInspector({ damages, onChange, preExistingDamages = [], mod
           <div className="grid gap-1.5">
             {damages.map((pin, i) => (
               <button key={pin.id} onClick={() => setSelectedPin(pin.id)}
-                className="flex items-start gap-3 bg-slate-50 hover:bg-slate-100 border border-[#E7E7E7] rounded-lg px-3 py-2.5 text-left transition-colors w-full">
+                className="flex items-start gap-3 bg-slate-50 hover:bg-slate-100 border border-ink-150 rounded-lg px-3 py-2.5 text-left transition-colors w-full">
                 <span className="w-6 h-6 rounded-full bg-orange-500 text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-slate-700 leading-snug truncate">{pin.note}</p>

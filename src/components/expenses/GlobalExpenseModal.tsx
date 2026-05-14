@@ -149,9 +149,9 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
         className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-5 border-b border-[#E7E7E7] flex items-center justify-between">
+        <div className="px-6 py-5 border-b border-ink-150 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-[#003580]">Globalni trošak</h2>
+            <h2 className="text-lg font-bold text-brand-500">Globalni trošak</h2>
             <p className="text-xs text-slate-500 mt-0.5">
               Podijeljen ravnomjerno na {vehicleCount} {vehicleCount === 1 ? "vozilo" : vehicleCount < 5 ? "vozila" : "vozila"}
             </p>
@@ -174,7 +174,7 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
               placeholder="npr. Reklamna kampanja Q2"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
             />
           </div>
 
@@ -186,7 +186,7 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
               <select
                 value={form.type}
                 onChange={(e) => setForm({ ...form, type: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               >
                 {TYPES.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
@@ -201,7 +201,7 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
                 type="date"
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
             </div>
           </div>
@@ -218,7 +218,7 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
                 placeholder="npr. 100.00"
                 value={form.total_amount || ""}
                 onChange={(e) => setForm({ ...form, total_amount: parseFloat(e.target.value) || 0 })}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]"
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
               {form.total_amount > 0 && (
                 <p className="text-[11px] text-slate-400 mt-1">≈ {(form.total_amount * 1.9583).toFixed(2)} KM</p>
@@ -228,7 +228,7 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
               <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">
                 Po vozilu
               </label>
-              <div className="w-full bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-[#003580] text-sm font-bold">
+              <div className="w-full bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-brand-500 text-sm font-bold">
                 {(perVehicle * 1.9583).toFixed(2)} KM
               </div>
             </div>
@@ -243,7 +243,7 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
               placeholder="npr. Google Ads"
               value={form.vendor}
               onChange={(e) => setForm({ ...form, vendor: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#003580]/20 focus:border-[#003580]"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
             />
           </div>
 
@@ -254,7 +254,7 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
               <button
                 type="button"
                 onClick={() => setSplitMonths(v => v <= 1 ? 2 : 1)}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${splitMonths > 1 ? "bg-[#003580]" : "bg-slate-300"}`}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${splitMonths > 1 ? "bg-brand-500" : "bg-slate-300"}`}
               >
                 <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${splitMonths > 1 ? "translate-x-4" : "translate-x-0.5"}`} />
               </button>
@@ -273,12 +273,12 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
                       setSplitMonths(isNaN(n) ? 0 : n);
                     }}
                     onBlur={() => { if (splitMonths < 2) setSplitMonths(2); }}
-                    className="w-16 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#003580]/20"
+                    className="w-16 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                   />
                 </div>
                 {splitMonths >= 2 && (
                   <div className="text-xs text-slate-500">
-                    = <span className="font-semibold text-[#003580]">{vehicleCount > 0 ? (form.total_amount / vehicleCount / splitMonths * 1.9583).toFixed(2) : "0.00"} KM</span> / vozilo / mjesec
+                    = <span className="font-semibold text-brand-500">{vehicleCount > 0 ? (form.total_amount / vehicleCount / splitMonths * 1.9583).toFixed(2) : "0.00"} KM</span> / vozilo / mjesec
                   </div>
                 )}
               </div>
@@ -288,7 +288,7 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
           <ReceiptUpload value={photo} onChange={setPhoto} />
         </div>
 
-        <div className="px-6 py-4 border-t border-[#E7E7E7] flex justify-end gap-2">
+        <div className="px-6 py-4 border-t border-ink-150 flex justify-end gap-2">
           <button
             onClick={onClose}
             disabled={saving}
@@ -299,7 +299,7 @@ export default function GlobalExpenseModal({ isOpen, onClose, onSaved }: Props) 
           <button
             onClick={save}
             disabled={saving || !form.description.trim() || form.total_amount <= 0}
-            className="px-5 py-2 rounded-lg text-sm font-semibold bg-[#003580] text-white hover:bg-[#002660] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-5 py-2 rounded-lg text-sm font-semibold bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {saving ? "Spremanje..." : "Spremi i podijeli"}
           </button>
