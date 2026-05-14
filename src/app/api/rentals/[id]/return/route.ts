@@ -12,7 +12,9 @@ type DamagePinInput = {
 };
 
 const MAX_REQUEST_BYTES = 256 * 1024;
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+// Shape-only UUID check. Postgres `uuid` accepts any hex UUID regardless of
+// version/variant bits, and existing seed data uses non-RFC patterns.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function cleanText(value: unknown, max = 200) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
